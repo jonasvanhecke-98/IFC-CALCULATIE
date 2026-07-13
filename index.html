@@ -2,6 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
@@ -14,12 +15,12 @@
 
 <body>
   <main class="app">
-    <header>
+    <header class="header">
       <p class="eyebrow">IFC CALCULATIE</p>
 
       <h1>Trimble Connect modelanalyse</h1>
 
-      <p>
+      <p class="intro">
         Analyseer modellen die reeds in het geopende
         Trimble Connect-project aanwezig zijn.
       </p>
@@ -34,12 +35,36 @@
         Verbinden met Trimble Connect
       </button>
 
-      <pre id="result" hidden></pre>
+      <section id="project-card" class="project-card" hidden>
+        <h2>Actief project</h2>
+
+        <dl>
+          <div>
+            <dt>Naam</dt>
+            <dd id="project-name">—</dd>
+          </div>
+
+          <div>
+            <dt>Project-ID</dt>
+            <dd id="project-id">—</dd>
+          </div>
+
+          <div>
+            <dt>Regio</dt>
+            <dd id="project-region">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <details class="debug">
+        <summary>Technische gegevens</summary>
+        <pre id="result">Nog geen gegevens.</pre>
+      </details>
     </section>
   </main>
 
   <script
-    src="https://cdn.jsdelivr.net/npm/trimble-connect-workspace-api/dist/trimble-connect-workspace-api.min.js"
+    src="https://components.connect.trimble.com/trimble-connect-workspace-api/index.js"
   ></script>
 
   <script src="./app.js"></script>
