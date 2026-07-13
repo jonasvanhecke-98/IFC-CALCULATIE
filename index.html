@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>IFC Calculatietool</title>
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <main class="app">
+    <header>
+      <p class="eyebrow">IFC CALCULATIE</p>
+
+      <h1>Trimble Connect modelanalyse</h1>
+
+      <p>
+        Analyseer modellen die reeds in het geopende
+        Trimble Connect-project aanwezig zijn.
+      </p>
+    </header>
+
+    <section class="panel">
+      <div id="status" class="status">
+        Extensie wordt gestart...
+      </div>
+
+      <button id="connect-button" type="button">
+        Verbinden met Trimble Connect
+      </button>
+
+      <pre id="result" hidden></pre>
+    </section>
+  </main>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/trimble-connect-workspace-api/dist/trimble-connect-workspace-api.min.js"
+  ></script>
+
+  <script src="./app.js"></script>
+</body>
+</html>
