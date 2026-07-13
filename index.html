@@ -12,17 +12,17 @@
 
   <style>
     :root {
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
+      font-family: Arial, Helvetica, sans-serif;
       color: #1d2d38;
       background: #eef1f3;
     }
 
     * {
       box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     body {
@@ -32,10 +32,6 @@
 
     button {
       font: inherit;
-    }
-
-    [hidden] {
-      display: none !important;
     }
 
     .app {
@@ -217,7 +213,7 @@
       height: 38px;
       border-radius: 7px;
       background: #e8eef1;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
     }
 
@@ -256,12 +252,13 @@
       margin-top: 14px;
     }
 
-    .details-block summary {
+    .details-block summary,
+    .debug summary {
       cursor: pointer;
       font-weight: 700;
     }
 
-    .other-class-row {
+    .class-row {
       display: flex;
       justify-content: space-between;
       gap: 15px;
@@ -272,11 +269,6 @@
 
     .debug {
       margin-top: 18px;
-    }
-
-    .debug summary {
-      cursor: pointer;
-      font-weight: 700;
     }
 
     pre {
@@ -298,14 +290,6 @@
     }
 
     @media (max-width: 340px) {
-      .app {
-        padding: 10px;
-      }
-
-      .panel {
-        padding: 12px;
-      }
-
       .summary-grid {
         grid-template-columns: 1fr;
       }
@@ -372,6 +356,7 @@
 
         <div id="analysis-progress" class="progress" hidden>
           <div class="spinner"></div>
+
           <span id="progress-text">
             Objecten worden uitgelezen...
           </span>
@@ -422,71 +407,52 @@
   ></script>
 
   <script>
-    const statusElement =
-      document.getElementById("status");
+    const statusElement = document.getElementById("status");
+    const connectButton = document.getElementById("connect-button");
+    const modelCard = document.getElementById("model-card");
+    const modelNameElement = document.getElementById("model-name");
+    const analyseButton = document.getElementById("analyse-button");
 
-    const connectButton =
-      document.getElementById("connect-button");
+    const analysisCard = document.getElementById("analysis-card");
+    const analysisSummary = document.getElementById("analysis-summary");
+    const analysisProgress = document.getElementById("analysis-progress");
+    const progressText = document.getElementById("progress-text");
+    const summaryGrid = document.getElementById("summary-grid");
+    const runtimeCountElement = document.getElementById("runtime-count");
+    const propertyCountElement = document.getElementById("property-count");
+    const categoriesList = document.getElementById("categories-list");
 
-    const modelCard =
-      document.getElementById("model-card");
+    const otherClassesDetails = document.getElementById(
+      "other-classes-details"
+    );
 
-    const modelNameElement =
-      document.getElementById("model-name");
+    const otherClassesList = document.getElementById(
+      "other-classes-list"
+    );
 
-    const analyseButton =
-      document.getElementById("analyse-button");
+    const unknownDetails = document.getElementById(
+      "unknown-details"
+    );
 
-    const analysisCard =
-      document.getElementById("analysis-card");
+    const unknownList = document.getElementById(
+      "unknown-list"
+    );
 
-    const analysisSummary =
-      document.getElementById("analysis-summary");
-
-    const analysisProgress =
-      document.getElementById("analysis-progress");
-
-    const progressText =
-      document.getElementById("progress-text");
-
-    const summaryGrid =
-      document.getElementById("summary-grid");
-
-    const runtimeCountElement =
-      document.getElementById("runtime-count");
-
-    const propertyCountElement =
-      document.getElementById("property-count");
-
-    const categoriesList =
-      document.getElementById("categories-list");
-
-    const otherClassesDetails =
-      document.getElementById("other-classes-details");
-
-    const otherClassesList =
-      document.getElementById("other-classes-list");
-
-    const unknownDetails =
-      document.getElementById("unknown-details");
-
-    const unknownList =
-      document.getElementById("unknown-list");
-
-    const debugResult =
-      document.getElementById("debug-result");
+    const debugResult = document.getElementById(
+      "debug-result"
+    );
 
     let workspaceApi = null;
     let loadedModel = null;
     let isConnecting = false;
     let isAnalysing = false;
 
-    const categoryDefinitions = [
+    const categories = [
       {
         key: "walls",
         label: "Wanden",
         icon: "▥",
-        names: [
+        classes: [
           "ifcwall",
           "ifcwallstandardcase",
           "wall",
@@ -497,18 +463,17 @@
         key: "slabs",
         label: "Vloeren en platen",
         icon: "▰",
-        names: [
+        classes: [
           "ifcslab",
           "slab",
-          "floor",
-          "floors"
+          "floor"
         ]
       },
       {
         key: "roofs",
         label: "Daken",
         icon: "⌂",
-        names: [
+        classes: [
           "ifcroof",
           "roof"
         ]
@@ -517,7 +482,7 @@
         key: "beams",
         label: "Liggers",
         icon: "▬",
-        names: [
+        classes: [
           "ifcbeam",
           "beam"
         ]
@@ -526,7 +491,7 @@
         key: "columns",
         label: "Kolommen",
         icon: "▮",
-        names: [
+        classes: [
           "ifccolumn",
           "column"
         ]
@@ -535,7 +500,7 @@
         key: "foundations",
         label: "Funderingen",
         icon: "▱",
-        names: [
+        classes: [
           "ifcfooting",
           "ifcpile",
           "footing",
@@ -547,7 +512,7 @@
         key: "doors",
         label: "Deuren",
         icon: "▯",
-        names: [
+        classes: [
           "ifcdoor",
           "door"
         ]
@@ -556,7 +521,7 @@
         key: "windows",
         label: "Ramen",
         icon: "▦",
-        names: [
+        classes: [
           "ifcwindow",
           "window"
         ]
@@ -565,7 +530,7 @@
         key: "coverings",
         label: "Afwerkingen en plafonds",
         icon: "▤",
-        names: [
+        classes: [
           "ifccovering",
           "covering",
           "ceiling"
@@ -575,7 +540,7 @@
         key: "stairs",
         label: "Trappen",
         icon: "▟",
-        names: [
+        classes: [
           "ifcstair",
           "ifcstairflight",
           "stair",
@@ -584,9 +549,9 @@
       },
       {
         key: "members",
-        label: "Profielen en onderdelen",
+        label: "Profielen en platen",
         icon: "╫",
-        names: [
+        classes: [
           "ifcmember",
           "ifcplate",
           "member",
@@ -597,7 +562,7 @@
         key: "spaces",
         label: "Ruimtes",
         icon: "□",
-        names: [
+        classes: [
           "ifcspace",
           "space"
         ]
@@ -606,7 +571,7 @@
         key: "railings",
         label: "Leuningen",
         icon: "╥",
-        names: [
+        classes: [
           "ifcrailing",
           "railing"
         ]
@@ -615,7 +580,7 @@
         key: "curtainwalls",
         label: "Gordijngevels",
         icon: "▦",
-        names: [
+        classes: [
           "ifccurtainwall",
           "curtainwall"
         ]
@@ -624,7 +589,7 @@
         key: "furniture",
         label: "Meubilair",
         icon: "▣",
-        names: [
+        classes: [
           "ifcfurnishingelement",
           "furnishingelement",
           "furniture"
@@ -634,7 +599,7 @@
         key: "proxies",
         label: "Overige bouwelementen",
         icon: "◇",
-        names: [
+        classes: [
           "ifcbuildingelementproxy",
           "buildingelementproxy"
         ]
@@ -698,27 +663,18 @@
 
         await detectLoadedModel();
       } catch (error) {
-        console.error(
-          "Verbindingsfout:",
-          error
-        );
-
         workspaceApi = null;
         loadedModel = null;
-
         modelCard.hidden = true;
 
         setStatus(
-          "Geen verbinding. Open de tool als extensie in de Trimble Connect 3D Viewer.",
+          "Geen verbinding met Trimble Connect.",
           "error"
         );
 
         showDebug({
-          connected: false,
-          error: getErrorMessage(error),
-          insideTrimbleIframe:
-            window.parent !== window,
-          page: window.location.href
+          phase: "connect",
+          error: getErrorMessage(error)
         });
       } finally {
         connectButton.disabled = false;
@@ -727,22 +683,17 @@
     }
 
     async function detectLoadedModel() {
-      if (!workspaceApi) {
-        return;
-      }
-
       try {
         const response =
           await workspaceApi.viewer.getModels();
 
-        const models =
-          Array.isArray(response)
-            ? response
-            : [];
+        const models = Array.isArray(response)
+          ? response
+          : [];
 
         loadedModel =
-          models.find(isExplicitlyActiveModel) ||
-          models.find(isVisibleOrLoadedModel) ||
+          models.find(isActiveModel) ||
+          models.find(isLoadedModel) ||
           (
             models.length === 1
               ? models[0]
@@ -753,19 +704,18 @@
 
         if (!loadedModel) {
           modelNameElement.textContent =
-            "Geen eenduidig geladen model gevonden.";
+            "Geen geladen model gevonden.";
 
           analyseButton.disabled = true;
 
           setStatus(
-            "Laad of toon één model in de 3D Viewer en probeer opnieuw.",
+            "Laad of toon één model in de 3D Viewer.",
             "warning"
           );
 
           showDebug({
-            connected: true,
-            detectedModel: null,
-            availableModels: models
+            phase: "detect-model",
+            models
           });
 
           return;
@@ -777,19 +727,12 @@
         analyseButton.disabled = false;
 
         showDebug({
-          connected: true,
-          detectedModel: loadedModel,
-          availableModelCount: models.length,
-          availableModels: models
+          phase: "ready",
+          loadedModel,
+          modelCount: models.length
         });
       } catch (error) {
-        console.error(
-          "Het geladen model kon niet worden bepaald:",
-          error
-        );
-
         loadedModel = null;
-
         modelCard.hidden = false;
 
         modelNameElement.textContent =
@@ -803,8 +746,7 @@
         );
 
         showDebug({
-          connected: true,
-          detectedModel: null,
+          phase: "detect-model",
           error: getErrorMessage(error)
         });
       }
@@ -826,30 +768,42 @@
 
       analysisCard.hidden = false;
       analysisProgress.hidden = false;
+      summaryGrid.hidden = false;
 
       setStatus(
         "Het geladen model wordt geanalyseerd..."
       );
 
+      const debug = {
+        phase: "start",
+        model: loadedModel,
+        runtimeIdCount: 0,
+        propertyCount: 0,
+        failedBatches: [],
+        sampleObjects: []
+      };
+
       try {
-        const modelId =
-          getModelId(loadedModel);
+        const modelId = getModelId(loadedModel);
 
         if (!modelId) {
           throw new Error(
-            "Het model-ID van het geladen model kon niet worden bepaald."
+            "Het model-ID ontbreekt."
           );
         }
+
+        debug.modelId = modelId;
+        debug.phase = "getObjects";
 
         progressText.textContent =
           "Object-ID's worden opgehaald...";
 
-        const groupsResponse =
+        const objectsResponse =
           await workspaceApi.viewer.getObjects();
 
         const modelGroups =
-          Array.isArray(groupsResponse)
-            ? groupsResponse
+          Array.isArray(objectsResponse)
+            ? objectsResponse
             : [];
 
         let matchingGroups =
@@ -869,7 +823,7 @@
 
         if (matchingGroups.length === 0) {
           throw new Error(
-            "Er werd geen objectgroep voor het geladen model gevonden."
+            "Geen objectgroep gevonden voor het geladen model."
           );
         }
 
@@ -878,139 +832,115 @@
 
         if (runtimeIds.length === 0) {
           throw new Error(
-            "Er werden geen runtime object-ID's gevonden."
+            "Geen runtime-object-ID's gevonden."
           );
         }
 
+        debug.runtimeIdCount = runtimeIds.length;
+
         runtimeCountElement.textContent =
-          runtimeIds.length.toLocaleString("nl-BE");
+          formatNumber(runtimeIds.length);
 
-        propertyCountElement.textContent = "0";
+        debug.phase = "getObjectProperties";
 
-        summaryGrid.hidden = false;
-
-        progressText.textContent =
-          "Objecteigenschappen worden opgehaald...";
-
-        analysisSummary.textContent =
-          runtimeIds.length.toLocaleString("nl-BE") +
-          " objecten gevonden. Properties worden uitgelezen.";
-
-        const batchSize = 200;
-        const objectProperties = [];
-        const failedBatches = [];
+        const properties = [];
+        const batchSize = 150;
 
         for (
-          let startIndex = 0;
-          startIndex < runtimeIds.length;
-          startIndex += batchSize
+          let start = 0;
+          start < runtimeIds.length;
+          start += batchSize
         ) {
-          const batch =
-            runtimeIds.slice(
-              startIndex,
-              startIndex + batchSize
-            );
+          const batch = runtimeIds.slice(
+            start,
+            start + batchSize
+          );
+
+          const processed = Math.min(
+            start + batch.length,
+            runtimeIds.length
+          );
+
+          progressText.textContent =
+            "Properties ophalen: " +
+            formatNumber(processed) +
+            " / " +
+            formatNumber(runtimeIds.length);
 
           try {
-            const batchResponse =
+            const propertyResponse =
               await workspaceApi.viewer
                 .getObjectProperties(
                   modelId,
                   batch
                 );
 
-            const normalizedBatch =
+            const batchObjects =
               normalizePropertyResponse(
-                batchResponse
+                propertyResponse
               );
 
-            objectProperties.push(
-              ...normalizedBatch
-            );
+            properties.push(...batchObjects);
           } catch (batchError) {
-            console.error(
-              "Fout in propertybatch:",
-              batchError
-            );
-
-            failedBatches.push({
-              startIndex,
+            debug.failedBatches.push({
+              start,
               size: batch.length,
-              error:
-                getErrorMessage(batchError)
+              error: getErrorMessage(batchError)
             });
           }
 
-          const processed =
-            Math.min(
-              startIndex + batch.length,
-              runtimeIds.length
-            );
-
           propertyCountElement.textContent =
-            objectProperties.length
-              .toLocaleString("nl-BE");
+            formatNumber(properties.length);
 
           analysisSummary.textContent =
-            processed.toLocaleString("nl-BE") +
+            formatNumber(processed) +
             " van " +
-            runtimeIds.length.toLocaleString("nl-BE") +
+            formatNumber(runtimeIds.length) +
             " objecten verwerkt.";
-
-          progressText.textContent =
-            "Objecteigenschappen ophalen: " +
-            processed.toLocaleString("nl-BE") +
-            " / " +
-            runtimeIds.length.toLocaleString("nl-BE");
         }
 
-        if (objectProperties.length === 0) {
+        debug.propertyCount = properties.length;
+
+        debug.sampleObjects =
+          properties
+            .slice(0, 3)
+            .map(createSafeSample);
+
+        if (properties.length === 0) {
           throw new Error(
-            "Trimble Connect gaf geen objectproperties terug."
+            "Er werden geen objectproperties ontvangen."
           );
         }
+
+        debug.phase = "analyse";
 
         progressText.textContent =
-          "Bouwcategorieën worden samengesteld...";
+          "Objectklassen worden geanalyseerd...";
 
-        const analysis =
-          buildAnalysisFromProperties(
-            objectProperties
-          );
+        const result = analyseProperties(properties);
 
-        renderAnalysis(analysis);
+        renderResult(result);
+
+        debug.phase = "completed";
+        debug.result = result;
 
         setStatus(
           "Analyse van het geladen model voltooid.",
           "success"
         );
 
-        showDebug({
-          model: loadedModel,
-          modelId,
-          runtimeIdCount: runtimeIds.length,
-          propertyCount:
-            objectProperties.length,
-          failedBatchCount:
-            failedBatches.length,
-          failedBatches,
-          sampleObjects:
-            objectProperties.slice(0, 3),
-          analysis
-        });
+        showDebug(debug);
       } catch (error) {
-        console.error(
-          "Modelanalyse mislukt:",
-          error
-        );
+        debug.error = getErrorMessage(error);
 
         analysisSummary.textContent =
           "De analyse kon niet worden uitgevoerd.";
 
         categoriesList.innerHTML = `
           <div class="empty-state">
-            De objecteigenschappen konden niet worden uitgelezen.
-            Open de technische gegevens voor meer informatie.
+            Fout tijdens:
+            <strong>${escapeHtml(debug.phase)}</strong>.
+            Bekijk de technische gegevens.
           </div>
         `;
 
@@ -1019,16 +949,335 @@
           "error"
         );
 
-        showDebug({
-          analysisCompleted: false,
-          model: loadedModel,
-          error: getErrorMessage(error)
-        });
+        showDebug(debug);
       } finally {
         analysisProgress.hidden = true;
         analyseButton.disabled = false;
         isAnalysing = false;
       }
+    }
+
+    function analyseProperties(objects) {
+      const categoryMap = {};
+      const classCounts = {};
+      let unknownCount = 0;
+
+      categories.forEach(function (category) {
+        categoryMap[category.key] = {
+          key: category.key,
+          label: category.label,
+          icon: category.icon,
+          count: 0,
+          classes: {}
+        };
+      });
+
+      objects.forEach(function (object) {
+        let className = "Onbekende klasse";
+
+        try {
+          className = getObjectClass(object);
+        } catch (error) {
+          className = "Onbekende klasse";
+        }
+
+        classCounts[className] =
+          (classCounts[className] || 0) + 1;
+
+        if (className === "Onbekende klasse") {
+          unknownCount += 1;
+          return;
+        }
+
+        const category = findCategory(className);
+
+        if (!category) {
+          return;
+        }
+
+        const target = categoryMap[category.key];
+
+        target.count += 1;
+
+        target.classes[className] =
+          (target.classes[className] || 0) + 1;
+      });
+
+      const categoryResults =
+        Object.values(categoryMap)
+          .filter(function (category) {
+            return category.count > 0;
+          })
+          .sort(function (a, b) {
+            return b.count - a.count;
+          });
+
+      const otherClasses =
+        Object.entries(classCounts)
+          .filter(function (entry) {
+            return (
+              entry[0] !== "Onbekende klasse" &&
+              !findCategory(entry[0])
+            );
+          })
+          .sort(function (a, b) {
+            return b[1] - a[1];
+          });
+
+      return {
+        totalObjects: objects.length,
+        unknownCount,
+        categories: categoryResults,
+        otherClasses
+      };
+    }
+
+    function getObjectClass(object) {
+      if (
+        !object ||
+        typeof object !== "object"
+      ) {
+        return "Onbekende klasse";
+      }
+
+      const directValues = [
+        object.class,
+        object.className,
+        object.ifcClass,
+        object.entityType,
+        object.objectType,
+        object.type
+      ];
+
+      for (const value of directValues) {
+        const text = readText(value);
+
+        if (text) {
+          return text;
+        }
+      }
+
+      if (
+        object.product &&
+        typeof object.product === "object"
+      ) {
+        const productValues = [
+          object.product.class,
+          object.product.className,
+          object.product.ifcClass,
+          object.product.entityType,
+          object.product.objectType,
+          object.product.type
+        ];
+
+        for (const value of productValues) {
+          const text = readText(value);
+
+          if (text) {
+            return text;
+          }
+        }
+      }
+
+      const propertyValue =
+        findClassInPropertySets(
+          object.properties
+        );
+
+      return propertyValue ||
+        "Onbekende klasse";
+    }
+
+    function findClassInPropertySets(propertySets) {
+      if (!Array.isArray(propertySets)) {
+        return null;
+      }
+
+      const acceptedNames = [
+        "class",
+        "classname",
+        "ifcclass",
+        "ifcentity",
+        "entity",
+        "entitytype",
+        "objecttype"
+      ];
+
+      for (const propertySet of propertySets) {
+        if (
+          !propertySet ||
+          typeof propertySet !== "object"
+        ) {
+          continue;
+        }
+
+        const arrays = [
+          propertySet.properties,
+          propertySet.values,
+          propertySet.items
+        ];
+
+        for (const propertyArray of arrays) {
+          if (!Array.isArray(propertyArray)) {
+            continue;
+          }
+
+          for (const property of propertyArray) {
+            if (
+              !property ||
+              typeof property !== "object"
+            ) {
+              continue;
+            }
+
+            const propertyName =
+              normalizeText(
+                property.name ||
+                property.key ||
+                property.propertyName
+              );
+
+            if (
+              !acceptedNames.includes(
+                propertyName
+              )
+            ) {
+              continue;
+            }
+
+            const propertyValue = readText(
+              property.value ??
+              property.displayValue ??
+              property.nominalValue
+            );
+
+            if (propertyValue) {
+              return propertyValue;
+            }
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function renderResult(result) {
+      analysisSummary.textContent =
+        formatNumber(result.totalObjects) +
+        " objectproperties onderzocht in " +
+        getModelName(loadedModel) +
+        ".";
+
+      propertyCountElement.textContent =
+        formatNumber(result.totalObjects);
+
+      if (result.categories.length === 0) {
+        categoriesList.innerHTML = `
+          <div class="empty-state">
+            Er werden nog geen herkenbare
+            bouwcategorieën gevonden.
+          </div>
+        `;
+      } else {
+        categoriesList.innerHTML =
+          result.categories
+            .map(renderCategory)
+            .join("");
+      }
+
+      renderOtherClasses(
+        result.otherClasses
+      );
+
+      renderUnknown(
+        result.unknownCount
+      );
+    }
+
+    function renderCategory(category) {
+      const classLines =
+        Object.entries(category.classes)
+          .sort(function (a, b) {
+            return b[1] - a[1];
+          })
+          .map(function (entry) {
+            return `
+              <span>
+                ${escapeHtml(entry[0])}:
+                ${formatNumber(entry[1])}
+              </span>
+            `;
+          })
+          .join("");
+
+      return `
+        <article class="category-card">
+          <div class="category-icon">
+            ${escapeHtml(category.icon)}
+          </div>
+
+          <div class="category-content">
+            <h3>
+              ${escapeHtml(category.label)}
+            </h3>
+
+            <div class="category-classes">
+              ${classLines}
+            </div>
+          </div>
+
+          <strong class="category-count">
+            ${formatNumber(category.count)}
+          </strong>
+        </article>
+      `;
+    }
+
+    function renderOtherClasses(items) {
+      if (items.length === 0) {
+        otherClassesDetails.hidden = true;
+        otherClassesList.innerHTML = "";
+        return;
+      }
+
+      otherClassesDetails.hidden = false;
+
+      otherClassesList.innerHTML =
+        items
+          .map(function (entry) {
+            return `
+              <div class="class-row">
+                <span>
+                  ${escapeHtml(entry[0])}
+                </span>
+
+                <strong>
+                  ${formatNumber(entry[1])}
+                </strong>
+              </div>
+            `;
+          })
+          .join("");
+    }
+
+    function renderUnknown(count) {
+      if (!count) {
+        unknownDetails.hidden = true;
+        unknownList.innerHTML = "";
+        return;
+      }
+
+      unknownDetails.hidden = false;
+
+      unknownList.innerHTML = `
+        <div class="class-row">
+          <span>Onbekende klasse</span>
+
+          <strong>
+            ${formatNumber(count)}
+          </strong>
+        </div>
+      `;
     }
 
     function normalizePropertyResponse(response) {
@@ -1050,216 +1299,21 @@
         return response.data;
       }
 
-      if (
-        response &&
-        Array.isArray(response.properties)
-      ) {
-        return response.properties;
-      }
-
       return [];
     }
 
-    function buildAnalysisFromProperties(objects) {
-      const categoryResults = {};
-      const allClassCounts = {};
-      const unknownObjects = [];
-
-      categoryDefinitions.forEach(
-        function (definition) {
-          categoryResults[definition.key] = {
-            key: definition.key,
-            label: definition.label,
-            icon: definition.icon,
-            count: 0,
-            classes: {}
-          };
-        }
-      );
-
-      objects.forEach(function (object) {
-        const className =
-          determineObjectClass(object);
-
-        const category =
-          findCategory(className);
-
-        allClassCounts[className] =
-          (allClassCounts[className] || 0) + 1;
-
-        if (
-          className === "Onbekende klasse"
-        ) {
-          unknownObjects.push(object);
-        }
-
-        if (!category) {
-          return;
-        }
-
-        const result =
-          categoryResults[category.key];
-
-        result.count += 1;
-
-        result.classes[className] =
-          (result.classes[className] || 0) + 1;
-      });
-
-      const categories =
-        Object.values(categoryResults)
-          .filter(function (category) {
-            return category.count > 0;
-          })
-          .sort(function (a, b) {
-            return b.count - a.count;
-          });
-
-      const otherClasses =
-        Object.entries(allClassCounts)
-          .filter(function (entry) {
-            return (
-              entry[0] !== "Onbekende klasse" &&
-              !findCategory(entry[0])
-            );
-          })
-          .sort(function (a, b) {
-            return b[1] - a[1];
-          });
-
-      return {
-        totalObjects: objects.length,
-        categories,
-        otherClasses,
-        unknownCount:
-          unknownObjects.length,
-        unknownSamples:
-          unknownObjects.slice(0, 5)
-      };
-    }
-
-    function renderAnalysis(analysis) {
-      analysisSummary.textContent =
-        analysis.totalObjects
-          .toLocaleString("nl-BE") +
-        " objectproperties onderzocht in " +
-        getModelName(loadedModel) +
-        ".";
-
-      propertyCountElement.textContent =
-        analysis.totalObjects
-          .toLocaleString("nl-BE");
-
-      if (analysis.categories.length === 0) {
-        categoriesList.innerHTML = `
-          <div class="empty-state">
-            Er werden nog geen herkenbare bouwcategorieën gevonden.
-            Bekijk de andere objectklassen en technische gegevens.
-          </div>
-        `;
-      } else {
-        categoriesList.innerHTML =
-          analysis.categories
-            .map(function (category) {
-              const classLines =
-                Object.entries(
-                  category.classes
-                )
-                  .sort(function (a, b) {
-                    return b[1] - a[1];
-                  })
-                  .map(function (entry) {
-                    return `
-                      <span>
-                        ${escapeHtml(entry[0])}:
-                        ${Number(entry[1])
-                          .toLocaleString("nl-BE")}
-                      </span>
-                    `;
-                  })
-                  .join("");
-
-              return `
-                <article class="category-card">
-                  <div class="category-icon">
-                    ${escapeHtml(category.icon)}
-                  </div>
-
-                  <div class="category-content">
-                    <h3>
-                      ${escapeHtml(category.label)}
-                    </h3>
-
-                    <div class="category-classes">
-                      ${classLines}
-                    </div>
-                  </div>
-
-                  <strong class="category-count">
-                    ${category.count
-                      .toLocaleString("nl-BE")}
-                  </strong>
-                </article>
-              `;
-            })
-            .join("");
-      }
-
-      if (analysis.otherClasses.length > 0) {
-        otherClassesDetails.hidden = false;
-
-        otherClassesList.innerHTML =
-          analysis.otherClasses
-            .map(function (entry) {
-              return `
-                <div class="other-class-row">
-                  <span>
-                    ${escapeHtml(entry[0])}
-                  </span>
-
-                  <strong>
-                    ${Number(entry[1])
-                      .toLocaleString("nl-BE")}
-                  </strong>
-                </div>
-              `;
-            })
-            .join("");
-      } else {
-        otherClassesDetails.hidden = true;
-      }
-
-      if (analysis.unknownCount > 0) {
-        unknownDetails.hidden = false;
-
-        unknownList.innerHTML = `
-          <div class="other-class-row">
-            <span>Onbekende klasse</span>
-
-            <strong>
-              ${analysis.unknownCount
-                .toLocaleString("nl-BE")}
-            </strong>
-          </div>
-        `;
-      } else {
-        unknownDetails.hidden = true;
-      }
-    }
-
     function collectRuntimeIds(groups) {
-      const ids = [];
+      const result = [];
 
       groups.forEach(function (group) {
-        const groupIds =
-          getRuntimeIds(group);
-
-        ids.push(...groupIds);
+        result.push(
+          ...getRuntimeIds(group)
+        );
       });
 
       return Array.from(
         new Set(
-          ids
+          result
             .map(Number)
             .filter(Number.isFinite)
         )
@@ -1267,41 +1321,43 @@
     }
 
     function getRuntimeIds(group) {
-      const possibleArrays = [
-        group?.objectRuntimeIds,
-        group?.runtimeIds,
-        group?.objects,
-        group?.entities,
-        group?.objectIds
+      const candidates = [
+        group && group.objectRuntimeIds,
+        group && group.runtimeIds,
+        group && group.objects,
+        group && group.entities,
+        group && group.objectIds
       ];
 
-      for (
-        const possibleArray
-        of possibleArrays
-      ) {
-        if (!Array.isArray(possibleArray)) {
+      for (const candidate of candidates) {
+        if (!Array.isArray(candidate)) {
           continue;
         }
 
-        const ids =
-          possibleArray
-            .map(function (item) {
-              if (
-                typeof item === "number" ||
-                typeof item === "string"
-              ) {
-                return Number(item);
-              }
+        const ids = candidate
+          .map(function (item) {
+            if (
+              typeof item === "number" ||
+              typeof item === "string"
+            ) {
+              return Number(item);
+            }
 
+            if (
+              item &&
+              typeof item === "object"
+            ) {
               return Number(
-                item?.id ??
-                item?.runtimeId ??
-                item?.objectRuntimeId ??
-                item?.objectId ??
-                NaN
+                item.id ??
+                item.runtimeId ??
+                item.objectRuntimeId ??
+                item.objectId
               );
-            })
-            .filter(Number.isFinite);
+            }
+
+            return NaN;
+          })
+          .filter(Number.isFinite);
 
         if (ids.length > 0) {
           return ids;
@@ -1311,316 +1367,214 @@
       return [];
     }
 
-    function determineObjectClass(object) {
-      const directCandidates = [
-        object?.class,
-        object?.className,
-        object?.ifcClass,
-        object?.type,
-        object?.objectType,
-        object?.entityType,
-        object?.product?.class,
-        object?.product?.className,
-        object?.product?.ifcClass,
-        object?.product?.objectType,
-        object?.product?.type
-      ];
-
-      const directClass =
-        directCandidates.find(
-          isNonEmptyString
-        );
-
-      if (directClass) {
-        return cleanClassName(
-          directClass
-        );
-      }
-
-      const propertyClass =
-        findClassInPropertySets(object);
-
-      if (propertyClass) {
-        return cleanClassName(
-          propertyClass
-        );
-      }
-
-      return "Onbekende klasse";
-    }
-
-    function findClassInPropertySets(object) {
-      const propertyContainers = [
-        object?.properties,
-        object?.propertySets,
-        object?.propertysets,
-        object?.sets
-      ];
-
-      for (
-        const container
-        of propertyContainers
-      ) {
-        const found =
-          searchClassValue(container);
-
-        if (found) {
-          return found;
-        }
-      }
-
-      return null;
-    }
-
-    function searchClassValue(value) {
-      if (!value) {
-        return null;
-      }
-
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          const found =
-            searchClassValue(item);
-
-          if (found) {
-            return found;
-          }
-        }
-
-        return null;
-      }
-
-      if (
-        typeof value !== "object"
-      ) {
-        return null;
-      }
-
-      const nameCandidate =
-        value.name ||
-        value.key ||
-        value.propertyName;
-
-      const valueCandidate =
-        value.value ??
-        value.displayValue ??
-        value.nominalValue;
-
-      if (
-        isNonEmptyString(nameCandidate) &&
-        isClassPropertyName(nameCandidate) &&
-        isNonEmptyString(valueCandidate)
-      ) {
-        return valueCandidate;
-      }
-
-      for (
-        const [key, nestedValue]
-        of Object.entries(value)
-      ) {
-        if (
-          isClassPropertyName(key) &&
-          isNonEmptyString(nestedValue)
-        ) {
-          return nestedValue;
-        }
-
-        const nestedFound =
-          searchClassValue(nestedValue);
-
-        if (nestedFound) {
-          return nestedFound;
-        }
-      }
-
-      return null;
-    }
-
-    function isClassPropertyName(value) {
-      const normalized =
-        normalizeText(value);
-
-      return (
-        normalized === "class" ||
-        normalized === "classname" ||
-        normalized === "ifcclass" ||
-        normalized === "ifcentity" ||
-        normalized === "entity" ||
-        normalized === "entitytype" ||
-        normalized === "objecttype"
-      );
-    }
-
-    function cleanClassName(value) {
-      const text =
-        String(value).trim();
-
-      if (!text) {
-        return "Onbekende klasse";
-      }
-
-      return text;
-    }
-
     function findCategory(className) {
-      const normalizedClass =
+      const normalized =
         normalizeText(className);
 
-      if (!normalizedClass) {
+      if (!normalized) {
         return null;
       }
 
-      return (
-        categoryDefinitions.find(
-          function (category) {
-            return category.names.some(
-              function (candidate) {
-                const normalizedCandidate =
-                  normalizeText(candidate);
+      return categories.find(function (category) {
+        return category.classes.some(
+          function (candidate) {
+            const normalizedCandidate =
+              normalizeText(candidate);
 
-                return (
-                  normalizedClass ===
-                    normalizedCandidate ||
-                  normalizedClass.includes(
-                    normalizedCandidate
-                  )
-                );
-              }
+            return (
+              normalized === normalizedCandidate ||
+              normalized.includes(
+                normalizedCandidate
+              )
             );
           }
-        ) || null
+        );
+      }) || null;
+    }
+
+    function readText(value) {
+      if (typeof value === "string") {
+        const text = value.trim();
+
+        return text || null;
+      }
+
+      if (
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
+        return String(value);
+      }
+
+      if (
+        value &&
+        typeof value === "object"
+      ) {
+        if (
+          value.value !== undefined &&
+          value.value !== value
+        ) {
+          return readText(value.value);
+        }
+
+        if (
+          value.name !== undefined &&
+          value.name !== value
+        ) {
+          return readText(value.name);
+        }
+      }
+
+      return null;
+    }
+
+    function isActiveModel(model) {
+      const state = normalizeText(
+        model &&
+        (
+          model.state ||
+          model.status ||
+          model.loadState
+        )
+      );
+
+      return Boolean(
+        model &&
+        (
+          model.active === true ||
+          model.isActive === true ||
+          model.selected === true ||
+          state.includes("active")
+        )
       );
     }
 
-    function isExplicitlyActiveModel(model) {
-      const state =
-        normalizeText(
-          model?.state ||
-          model?.status ||
-          model?.loadState
-        );
-
-      return (
-        model?.active === true ||
-        model?.isActive === true ||
-        model?.selected === true ||
-        state.includes("active")
+    function isLoadedModel(model) {
+      const state = normalizeText(
+        model &&
+        (
+          model.state ||
+          model.status ||
+          model.loadState
+        )
       );
-    }
 
-    function isVisibleOrLoadedModel(model) {
-      const state =
-        normalizeText(
-          model?.state ||
-          model?.status ||
-          model?.loadState
-        );
-
-      return (
-        model?.visible === true ||
-        model?.isVisible === true ||
-        model?.loaded === true ||
-        model?.isLoaded === true ||
-        state.includes("visible") ||
-        state.includes("loaded")
+      return Boolean(
+        model &&
+        (
+          model.visible === true ||
+          model.isVisible === true ||
+          model.loaded === true ||
+          model.isLoaded === true ||
+          state.includes("visible") ||
+          state.includes("loaded")
+        )
       );
     }
 
     function getModelName(model) {
       return (
-        model?.name ||
-        model?.title ||
-        model?.fileName ||
-        model?.file?.name ||
-        "Naamloos model"
-      );
+        model &&
+        (
+          model.name ||
+          model.title ||
+          model.fileName ||
+          (
+            model.file &&
+            model.file.name
+          )
+        )
+      ) || "Naamloos model";
     }
 
     function getModelId(model) {
       return (
-        model?.id ||
-        model?.modelId ||
-        model?.fileId ||
-        model?.file?.id ||
-        ""
-      );
+        model &&
+        (
+          model.id ||
+          model.modelId ||
+          model.fileId ||
+          (
+            model.file &&
+            model.file.id
+          )
+        )
+      ) || "";
     }
 
     function getGroupModelId(group) {
       return (
-        group?.modelId ||
-        group?.model?.id ||
-        group?.fileId ||
-        group?.id ||
-        ""
-      );
+        group &&
+        (
+          group.modelId ||
+          (
+            group.model &&
+            group.model.id
+          ) ||
+          group.fileId ||
+          group.id
+        )
+      ) || "";
     }
 
     function sameId(first, second) {
-      if (
-        first === undefined ||
-        first === null ||
-        second === undefined ||
-        second === null
-      ) {
-        return false;
-      }
-
       return (
-        String(first) ===
-        String(second)
+        first !== undefined &&
+        first !== null &&
+        second !== undefined &&
+        second !== null &&
+        String(first) === String(second)
       );
     }
 
-    function normalizeText(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase()
-        .replaceAll(" ", "")
-        .replaceAll("_", "")
-        .replaceAll("-", "")
-        .replaceAll(".", "")
-        .replaceAll(":", "");
+    function createSafeSample(object) {
+      return {
+        id:
+          object && object.id,
+
+        class:
+          object && object.class,
+
+        product:
+          object && object.product
+            ? {
+                name:
+                  object.product.name,
+
+                objectType:
+                  object.product.objectType,
+
+                description:
+                  object.product.description
+              }
+            : null,
+
+        propertySetCount:
+          object &&
+          Array.isArray(object.properties)
+            ? object.properties.length
+            : 0
+      };
     }
 
-    function isNonEmptyString(value) {
-      return (
-        typeof value === "string" &&
-        value.trim() !== ""
-      );
-    }
-
-    function handleTrimbleEvent(
-      event,
-      data
-    ) {
-      console.log(
-        "Trimble Connect event:",
-        event,
-        data
-      );
-
+    function handleTrimbleEvent(event) {
       const eventName =
         String(event || "")
           .toLowerCase();
 
       if (
         eventName.includes("modelstate") ||
-        eventName.includes("model.state") ||
         eventName.includes("modelchanged")
       ) {
         detectLoadedModel();
       }
 
       if (
-        eventName ===
-          "extension.sessioninvalid" ||
-        eventName ===
-          "embed.session.invalid"
+        eventName === "extension.sessioninvalid" ||
+        eventName === "embed.session.invalid"
       ) {
         workspaceApi = null;
         loadedModel = null;
-
         analyseButton.disabled = true;
 
         setStatus(
@@ -1635,6 +1589,7 @@
       analysisProgress.hidden = true;
       summaryGrid.hidden = true;
 
+      analysisSummary.textContent = "";
       categoriesList.innerHTML = "";
       otherClassesList.innerHTML = "";
       unknownList.innerHTML = "";
@@ -1642,7 +1597,6 @@
       otherClassesDetails.hidden = true;
       unknownDetails.hidden = true;
 
-      analysisSummary.textContent = "";
       runtimeCountElement.textContent = "0";
       propertyCountElement.textContent = "0";
     }
@@ -1671,6 +1625,22 @@
       }
 
       return String(error);
+    }
+
+    function formatNumber(value) {
+      return Number(value || 0)
+        .toLocaleString("nl-BE");
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replaceAll(" ", "")
+        .replaceAll("_", "")
+        .replaceAll("-", "")
+        .replaceAll(".", "")
+        .replaceAll(":", "");
     }
 
     function escapeHtml(value) {
