@@ -30,7 +30,9 @@
       min-width: 280px;
     }
 
-    button {
+    button,
+    input,
+    select {
       font: inherit;
     }
 
@@ -111,6 +113,21 @@
       opacity: 0.55;
     }
 
+    .secondary-button {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #cbd5db;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #263b4a;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .secondary-button:hover {
+      background: #f0f4f6;
+    }
+
     .card {
       margin-top: 16px;
       padding: 15px;
@@ -189,24 +206,49 @@
       font-size: 19px;
     }
 
-    .categories-list {
+    .toolbar {
       display: grid;
-      gap: 9px;
+      grid-template-columns: 1fr;
+      gap: 8px;
       margin-top: 14px;
     }
 
-    .category-card {
+    .search-input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid #cbd5db;
+      border-radius: 7px;
+      background: #ffffff;
+    }
+
+    .groups-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .group-card {
+      border: 1px solid #dce3e7;
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .group-header {
       display: grid;
       grid-template-columns: 38px minmax(0, 1fr) auto;
       align-items: center;
       gap: 10px;
       padding: 12px;
-      border: 1px solid #dce3e7;
-      border-radius: 8px;
-      background: #ffffff;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .category-icon {
+    .group-header:hover {
+      background: #f4f7f8;
+    }
+
+    .group-icon {
       display: grid;
       place-items: center;
       width: 38px;
@@ -217,35 +259,79 @@
       font-weight: 700;
     }
 
-    .category-content {
+    .group-title {
       min-width: 0;
     }
 
-    .category-content h3 {
-      margin: 0 0 5px;
+    .group-title h3 {
+      margin: 0 0 4px;
       font-size: 15px;
     }
 
-    .category-classes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px 8px;
+    .group-title p {
+      margin: 0;
       color: #687985;
       font-size: 11px;
     }
 
-    .category-count {
+    .group-count {
       font-size: 18px;
     }
 
-    .empty-state {
-      margin-top: 12px;
-      padding: 14px;
-      border: 1px dashed #bac7ce;
+    .subgroups {
+      padding: 0 12px 12px;
+      border-top: 1px solid #e2e7ea;
+    }
+
+    .subgroup-card {
+      margin-top: 9px;
+      padding: 11px;
+      border: 1px solid #dfe6ea;
       border-radius: 7px;
+      background: #f8fafb;
+    }
+
+    .subgroup-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .subgroup-name {
+      min-width: 0;
+    }
+
+    .subgroup-name strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .subgroup-meta {
+      margin-top: 4px;
       color: #687985;
-      line-height: 1.5;
-      text-align: center;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .subgroup-count {
+      flex: 0 0 auto;
+      font-size: 16px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: #e8eef1;
+      color: #405461;
+      font-size: 10px;
     }
 
     .details-block {
@@ -258,13 +344,27 @@
       font-weight: 700;
     }
 
-    .class-row {
+    .property-row {
       display: flex;
       justify-content: space-between;
       gap: 15px;
       padding: 8px 0;
       border-bottom: 1px solid #e2e7ea;
       font-size: 13px;
+    }
+
+    .property-row span {
+      overflow-wrap: anywhere;
+    }
+
+    .empty-state {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px dashed #bac7ce;
+      border-radius: 7px;
+      color: #687985;
+      line-height: 1.5;
+      text-align: center;
     }
 
     .debug {
@@ -289,16 +389,16 @@
       }
     }
 
-    @media (max-width: 340px) {
+    @media (max-width: 360px) {
       .summary-grid {
         grid-template-columns: 1fr;
       }
 
-      .category-card {
+      .group-header {
         grid-template-columns: 32px minmax(0, 1fr) auto;
       }
 
-      .category-icon {
+      .group-icon {
         width: 32px;
         height: 32px;
       }
@@ -314,8 +414,8 @@
       <h1>Modelanalyse</h1>
 
       <p class="intro">
-        Analyseer het model dat momenteel geladen is in de
-        Trimble Connect 3D Viewer.
+        Analyseer het geladen model en groepeer objecten automatisch
+        op basis van gedeelde eigenschappen.
       </p>
     </header>
 
@@ -356,42 +456,66 @@
 
         <div id="analysis-progress" class="progress" hidden>
           <div class="spinner"></div>
-
-          <span id="progress-text">
-            Objecten worden uitgelezen...
-          </span>
+          <span id="progress-text">Objecten worden uitgelezen...</span>
         </div>
 
         <div id="summary-grid" class="summary-grid" hidden>
           <div class="summary-box">
-            <span>Runtime-objecten</span>
+            <span>Objecten gevonden</span>
             <strong id="runtime-count">0</strong>
           </div>
 
           <div class="summary-box">
-            <span>Properties gelezen</span>
+            <span>Objecten geanalyseerd</span>
             <strong id="property-count">0</strong>
+          </div>
+
+          <div class="summary-box">
+            <span>Grove groepen</span>
+            <strong id="group-count">0</strong>
+          </div>
+
+          <div class="summary-box">
+            <span>Subgroepen</span>
+            <strong id="subgroup-count">0</strong>
           </div>
         </div>
 
-        <div id="categories-list" class="categories-list"></div>
+        <div id="toolbar" class="toolbar" hidden>
+          <input
+            id="search-input"
+            class="search-input"
+            type="search"
+            placeholder="Zoek in groepen, types, namen of materialen..."
+          >
+
+          <button
+            id="expand-button"
+            class="secondary-button"
+            type="button"
+          >
+            Alle groepen openen
+          </button>
+        </div>
+
+        <div id="groups-list" class="groups-list"></div>
 
         <details
-          id="other-classes-details"
+          id="properties-details"
           class="details-block"
           hidden
         >
-          <summary>Andere objectklassen</summary>
-          <div id="other-classes-list"></div>
+          <summary>Meest voorkomende eigenschappen</summary>
+          <div id="properties-list"></div>
         </details>
 
         <details
-          id="unknown-details"
+          id="unclassified-details"
           class="details-block"
           hidden
         >
-          <summary>Objecten zonder herkenbare klasse</summary>
-          <div id="unknown-list"></div>
+          <summary>Nog te classificeren objecten</summary>
+          <div id="unclassified-list"></div>
         </details>
       </section>
 
@@ -407,202 +531,286 @@
   ></script>
 
   <script>
-    const statusElement = document.getElementById("status");
-    const connectButton = document.getElementById("connect-button");
-    const modelCard = document.getElementById("model-card");
-    const modelNameElement = document.getElementById("model-name");
-    const analyseButton = document.getElementById("analyse-button");
+    const statusElement =
+      document.getElementById("status");
 
-    const analysisCard = document.getElementById("analysis-card");
-    const analysisSummary = document.getElementById("analysis-summary");
-    const analysisProgress = document.getElementById("analysis-progress");
-    const progressText = document.getElementById("progress-text");
-    const summaryGrid = document.getElementById("summary-grid");
-    const runtimeCountElement = document.getElementById("runtime-count");
-    const propertyCountElement = document.getElementById("property-count");
-    const categoriesList = document.getElementById("categories-list");
+    const connectButton =
+      document.getElementById("connect-button");
 
-    const otherClassesDetails = document.getElementById(
-      "other-classes-details"
-    );
+    const modelCard =
+      document.getElementById("model-card");
 
-    const otherClassesList = document.getElementById(
-      "other-classes-list"
-    );
+    const modelNameElement =
+      document.getElementById("model-name");
 
-    const unknownDetails = document.getElementById(
-      "unknown-details"
-    );
+    const analyseButton =
+      document.getElementById("analyse-button");
 
-    const unknownList = document.getElementById(
-      "unknown-list"
-    );
+    const analysisCard =
+      document.getElementById("analysis-card");
 
-    const debugResult = document.getElementById(
-      "debug-result"
-    );
+    const analysisSummary =
+      document.getElementById("analysis-summary");
+
+    const analysisProgress =
+      document.getElementById("analysis-progress");
+
+    const progressText =
+      document.getElementById("progress-text");
+
+    const summaryGrid =
+      document.getElementById("summary-grid");
+
+    const runtimeCountElement =
+      document.getElementById("runtime-count");
+
+    const propertyCountElement =
+      document.getElementById("property-count");
+
+    const groupCountElement =
+      document.getElementById("group-count");
+
+    const subgroupCountElement =
+      document.getElementById("subgroup-count");
+
+    const toolbar =
+      document.getElementById("toolbar");
+
+    const searchInput =
+      document.getElementById("search-input");
+
+    const expandButton =
+      document.getElementById("expand-button");
+
+    const groupsList =
+      document.getElementById("groups-list");
+
+    const propertiesDetails =
+      document.getElementById("properties-details");
+
+    const propertiesList =
+      document.getElementById("properties-list");
+
+    const unclassifiedDetails =
+      document.getElementById("unclassified-details");
+
+    const unclassifiedList =
+      document.getElementById("unclassified-list");
+
+    const debugResult =
+      document.getElementById("debug-result");
 
     let workspaceApi = null;
     let loadedModel = null;
     let isConnecting = false;
     let isAnalysing = false;
+    let currentAnalysis = null;
+    let allGroupsExpanded = false;
 
-    const categories = [
+    const coarseGroupDefinitions = [
       {
         key: "walls",
         label: "Wanden",
         icon: "▥",
-        classes: [
-          "ifcwall",
-          "ifcwallstandardcase",
+        keywords: [
           "wall",
-          "wallstandardcase"
+          "wand",
+          "muur",
+          "partition",
+          "gevelwand",
+          "binnenwand",
+          "buitenwand",
+          "ifcwall"
         ]
       },
       {
-        key: "slabs",
+        key: "floors",
         label: "Vloeren en platen",
         icon: "▰",
-        classes: [
-          "ifcslab",
+        keywords: [
           "slab",
-          "floor"
+          "floor",
+          "vloer",
+          "plaat",
+          "predal",
+          "welfsel",
+          "breedplaat",
+          "ifcslab"
         ]
       },
       {
         key: "roofs",
         label: "Daken",
         icon: "⌂",
-        classes: [
-          "ifcroof",
-          "roof"
+        keywords: [
+          "roof",
+          "dak",
+          "dakplaat",
+          "roofing",
+          "ifcroof"
         ]
       },
       {
-        key: "beams",
-        label: "Liggers",
-        icon: "▬",
-        classes: [
-          "ifcbeam",
-          "beam"
-        ]
-      },
-      {
-        key: "columns",
-        label: "Kolommen",
-        icon: "▮",
-        classes: [
-          "ifccolumn",
-          "column"
-        ]
-      },
-      {
-        key: "foundations",
-        label: "Funderingen",
-        icon: "▱",
-        classes: [
-          "ifcfooting",
-          "ifcpile",
+        key: "structure",
+        label: "Constructie",
+        icon: "╫",
+        keywords: [
+          "beam",
+          "column",
+          "member",
           "footing",
           "pile",
-          "foundation"
+          "foundation",
+          "ligger",
+          "balk",
+          "kolom",
+          "fundering",
+          "paal",
+          "staal",
+          "beton",
+          "ifcbeam",
+          "ifccolumn",
+          "ifcmember",
+          "ifcfooting",
+          "ifcpile"
         ]
       },
       {
-        key: "doors",
-        label: "Deuren",
-        icon: "▯",
-        classes: [
-          "ifcdoor",
-          "door"
-        ]
-      },
-      {
-        key: "windows",
-        label: "Ramen",
+        key: "openings",
+        label: "Ramen en deuren",
         icon: "▦",
-        classes: [
-          "ifcwindow",
-          "window"
+        keywords: [
+          "door",
+          "window",
+          "deur",
+          "raam",
+          "kozijn",
+          "opening",
+          "ifcdoor",
+          "ifcwindow"
         ]
       },
       {
-        key: "coverings",
-        label: "Afwerkingen en plafonds",
+        key: "finishes",
+        label: "Afwerkingen",
         icon: "▤",
-        classes: [
-          "ifccovering",
+        keywords: [
           "covering",
-          "ceiling"
+          "ceiling",
+          "finish",
+          "afwerking",
+          "plafond",
+          "chape",
+          "dekvloer",
+          "isolatie",
+          "tegel",
+          "bekleding",
+          "ifccovering"
         ]
       },
       {
         key: "stairs",
-        label: "Trappen",
+        label: "Trappen en leuningen",
         icon: "▟",
-        classes: [
-          "ifcstair",
-          "ifcstairflight",
+        keywords: [
           "stair",
-          "stairflight"
+          "stairflight",
+          "railing",
+          "trap",
+          "leuning",
+          "balustrade",
+          "ifcstair",
+          "ifcrailing"
         ]
       },
       {
-        key: "members",
-        label: "Profielen en platen",
-        icon: "╫",
-        classes: [
-          "ifcmember",
-          "ifcplate",
-          "member",
-          "plate"
+        key: "facades",
+        label: "Gevels en gordijngevels",
+        icon: "▦",
+        keywords: [
+          "curtainwall",
+          "facade",
+          "façade",
+          "gevel",
+          "gordijngevel",
+          "ifccurtainwall"
+        ]
+      },
+      {
+        key: "mep",
+        label: "Technieken",
+        icon: "◉",
+        keywords: [
+          "pipe",
+          "duct",
+          "cable",
+          "tray",
+          "fitting",
+          "terminal",
+          "flow",
+          "sanitary",
+          "ventilation",
+          "hvac",
+          "leiding",
+          "kanaal",
+          "kabel",
+          "afvoer",
+          "lucht",
+          "electrical",
+          "mechanical",
+          "plumbing",
+          "ifcpipe",
+          "ifcduct",
+          "ifccable"
         ]
       },
       {
         key: "spaces",
-        label: "Ruimtes",
+        label: "Ruimtes en zones",
         icon: "□",
-        classes: [
+        keywords: [
+          "space",
+          "zone",
+          "room",
+          "ruimte",
+          "lokaal",
           "ifcspace",
-          "space"
-        ]
-      },
-      {
-        key: "railings",
-        label: "Leuningen",
-        icon: "╥",
-        classes: [
-          "ifcrailing",
-          "railing"
-        ]
-      },
-      {
-        key: "curtainwalls",
-        label: "Gordijngevels",
-        icon: "▦",
-        classes: [
-          "ifccurtainwall",
-          "curtainwall"
+          "ifczone"
         ]
       },
       {
         key: "furniture",
-        label: "Meubilair",
+        label: "Meubilair en uitrusting",
         icon: "▣",
-        classes: [
-          "ifcfurnishingelement",
-          "furnishingelement",
-          "furniture"
+        keywords: [
+          "furniture",
+          "furnishing",
+          "equipment",
+          "meubilair",
+          "uitrusting",
+          "toestel",
+          "ifcfurnishingelement"
         ]
       },
       {
-        key: "proxies",
-        label: "Overige bouwelementen",
-        icon: "◇",
-        classes: [
-          "ifcbuildingelementproxy",
-          "buildingelementproxy"
+        key: "site",
+        label: "Terrein en omgeving",
+        icon: "△",
+        keywords: [
+          "site",
+          "terrain",
+          "topography",
+          "terrein",
+          "omgeving",
+          "grond",
+          "ifcsite"
         ]
+      },
+      {
+        key: "other",
+        label: "Overige / nog te classificeren",
+        icon: "◇",
+        keywords: []
       }
     ];
 
@@ -614,6 +822,16 @@
     analyseButton.addEventListener(
       "click",
       analyseLoadedModel
+    );
+
+    searchInput.addEventListener(
+      "input",
+      renderFilteredGroups
+    );
+
+    expandButton.addEventListener(
+      "click",
+      toggleAllGroups
     );
 
     window.addEventListener("load", function () {
@@ -687,9 +905,10 @@
         const response =
           await workspaceApi.viewer.getModels();
 
-        const models = Array.isArray(response)
-          ? response
-          : [];
+        const models =
+          Array.isArray(response)
+            ? response
+            : [];
 
         loadedModel =
           models.find(isActiveModel) ||
@@ -774,17 +993,19 @@
         "Het geladen model wordt geanalyseerd..."
       );
 
-      const debug = {
+      const diagnostics = {
         phase: "start",
         model: loadedModel,
         runtimeIdCount: 0,
         propertyCount: 0,
+        rawFallbackCount: 0,
         failedBatches: [],
-        sampleObjects: []
+        samples: []
       };
 
       try {
-        const modelId = getModelId(loadedModel);
+        const modelId =
+          getModelId(loadedModel);
 
         if (!modelId) {
           throw new Error(
@@ -792,11 +1013,11 @@
           );
         }
 
-        debug.modelId = modelId;
-        debug.phase = "getObjects";
+        diagnostics.modelId = modelId;
+        diagnostics.phase = "getObjects";
 
         progressText.textContent =
-          "Object-ID's worden opgehaald...";
+          "Objecten worden opgehaald...";
 
         const objectsResponse =
           await workspaceApi.viewer.getObjects();
@@ -822,124 +1043,161 @@
         }
 
         if (matchingGroups.length === 0) {
-          throw new Error(
-            "Geen objectgroep gevonden voor het geladen model."
-          );
+          matchingGroups = modelGroups;
         }
+
+        const rawObjects =
+          collectRawObjects(matchingGroups);
 
         const runtimeIds =
           collectRuntimeIds(matchingGroups);
 
-        if (runtimeIds.length === 0) {
-          throw new Error(
-            "Geen runtime-object-ID's gevonden."
-          );
-        }
+        diagnostics.runtimeIdCount =
+          runtimeIds.length;
 
-        debug.runtimeIdCount = runtimeIds.length;
+        diagnostics.rawFallbackCount =
+          rawObjects.length;
 
         runtimeCountElement.textContent =
-          formatNumber(runtimeIds.length);
-
-        debug.phase = "getObjectProperties";
-
-        const properties = [];
-        const batchSize = 150;
-
-        for (
-          let start = 0;
-          start < runtimeIds.length;
-          start += batchSize
-        ) {
-          const batch = runtimeIds.slice(
-            start,
-            start + batchSize
+          formatNumber(
+            runtimeIds.length ||
+            rawObjects.length
           );
 
-          const processed = Math.min(
-            start + batch.length,
-            runtimeIds.length
-          );
+        const propertyObjects = [];
 
-          progressText.textContent =
-            "Properties ophalen: " +
-            formatNumber(processed) +
-            " / " +
-            formatNumber(runtimeIds.length);
+        if (runtimeIds.length > 0) {
+          diagnostics.phase =
+            "getObjectProperties";
 
-          try {
-            const propertyResponse =
-              await workspaceApi.viewer
-                .getObjectProperties(
-                  modelId,
-                  batch
-                );
+          const batchSize = 150;
 
-            const batchObjects =
-              normalizePropertyResponse(
-                propertyResponse
+          for (
+            let start = 0;
+            start < runtimeIds.length;
+            start += batchSize
+          ) {
+            const batch =
+              runtimeIds.slice(
+                start,
+                start + batchSize
               );
 
-            properties.push(...batchObjects);
-          } catch (batchError) {
-            debug.failedBatches.push({
-              start,
-              size: batch.length,
-              error: getErrorMessage(batchError)
-            });
+            const processed =
+              Math.min(
+                start + batch.length,
+                runtimeIds.length
+              );
+
+            progressText.textContent =
+              "Eigenschappen ophalen: " +
+              formatNumber(processed) +
+              " / " +
+              formatNumber(runtimeIds.length);
+
+            try {
+              const propertyResponse =
+                await workspaceApi.viewer
+                  .getObjectProperties(
+                    modelId,
+                    batch
+                  );
+
+              const batchObjects =
+                normalizePropertyResponse(
+                  propertyResponse
+                );
+
+              propertyObjects.push(
+                ...batchObjects
+              );
+            } catch (batchError) {
+              diagnostics.failedBatches.push({
+                start,
+                size: batch.length,
+                error:
+                  getErrorMessage(batchError)
+              });
+            }
+
+            propertyCountElement.textContent =
+              formatNumber(
+                propertyObjects.length
+              );
           }
-
-          propertyCountElement.textContent =
-            formatNumber(properties.length);
-
-          analysisSummary.textContent =
-            formatNumber(processed) +
-            " van " +
-            formatNumber(runtimeIds.length) +
-            " objecten verwerkt.";
         }
 
-        debug.propertyCount = properties.length;
+        diagnostics.propertyCount =
+          propertyObjects.length;
 
-        debug.sampleObjects =
-          properties
-            .slice(0, 3)
-            .map(createSafeSample);
+        let analysisObjects =
+          propertyObjects.length > 0
+            ? propertyObjects
+            : rawObjects;
 
-        if (properties.length === 0) {
-          throw new Error(
-            "Er werden geen objectproperties ontvangen."
-          );
+        if (analysisObjects.length === 0) {
+          analysisObjects =
+            runtimeIds.map(function (runtimeId) {
+              return {
+                id: runtimeId,
+                runtimeId: runtimeId,
+                name: "Object " + runtimeId
+              };
+            });
         }
-
-        debug.phase = "analyse";
 
         progressText.textContent =
-          "Objectklassen worden geanalyseerd...";
+          "Gemeenschappelijke eigenschappen worden onderzocht...";
 
-        const result = analyseProperties(properties);
+        diagnostics.phase = "grouping";
 
-        renderResult(result);
+        const analysis =
+          buildFlexibleAnalysis(
+            analysisObjects
+          );
 
-        debug.phase = "completed";
-        debug.result = result;
+        currentAnalysis = analysis;
+
+        diagnostics.samples =
+          analysisObjects
+            .slice(0, 5)
+            .map(createSafeSample);
+
+        diagnostics.analysisSummary = {
+          objectCount:
+            analysis.objectCount,
+          coarseGroupCount:
+            analysis.groups.length,
+          subgroupCount:
+            analysis.subgroupCount,
+          propertyNameCount:
+            analysis.commonProperties.length
+        };
+
+        renderAnalysis(analysis);
 
         setStatus(
           "Analyse van het geladen model voltooid.",
           "success"
         );
 
-        showDebug(debug);
+        showDebug(diagnostics);
       } catch (error) {
-        debug.error = getErrorMessage(error);
+        diagnostics.phase =
+          diagnostics.phase || "unknown";
+
+        diagnostics.error =
+          getErrorMessage(error);
 
         analysisSummary.textContent =
-          "De analyse kon niet worden uitgevoerd.";
+          "De analyse kon niet volledig worden uitgevoerd.";
 
-        categoriesList.innerHTML = `
+        groupsList.innerHTML = `
           <div class="empty-state">
             Fout tijdens:
-            <strong>${escapeHtml(debug.phase)}</strong>.
+            <strong>
+              ${escapeHtml(diagnostics.phase)}
+            </strong>.
             Bekijk de technische gegevens.
           </div>
         `;
@@ -949,7 +1207,7 @@
           "error"
         );
 
-        showDebug(debug);
+        showDebug(diagnostics);
       } finally {
         analysisProgress.hidden = true;
         analyseButton.disabled = false;
@@ -957,302 +1215,1140 @@
       }
     }
 
-    function analyseProperties(objects) {
-      const categoryMap = {};
-      const classCounts = {};
-      let unknownCount = 0;
+    function buildFlexibleAnalysis(objects) {
+      const preparedObjects =
+        objects.map(function (object, index) {
+          return prepareObject(
+            object,
+            index
+          );
+        });
 
-      categories.forEach(function (category) {
-        categoryMap[category.key] = {
-          key: category.key,
-          label: category.label,
-          icon: category.icon,
-          count: 0,
-          classes: {}
-        };
+      const groupMap = {};
+
+      coarseGroupDefinitions.forEach(
+        function (definition) {
+          groupMap[definition.key] = {
+            key: definition.key,
+            label: definition.label,
+            icon: definition.icon,
+            objects: [],
+            subgroups: []
+          };
+        }
+      );
+
+      preparedObjects.forEach(function (object) {
+        const coarseGroup =
+          determineCoarseGroup(object);
+
+        groupMap[coarseGroup.key]
+          .objects
+          .push(object);
       });
 
-      objects.forEach(function (object) {
-        let className = "Onbekende klasse";
-
-        try {
-          className = getObjectClass(object);
-        } catch (error) {
-          className = "Onbekende klasse";
-        }
-
-        classCounts[className] =
-          (classCounts[className] || 0) + 1;
-
-        if (className === "Onbekende klasse") {
-          unknownCount += 1;
-          return;
-        }
-
-        const category = findCategory(className);
-
-        if (!category) {
-          return;
-        }
-
-        const target = categoryMap[category.key];
-
-        target.count += 1;
-
-        target.classes[className] =
-          (target.classes[className] || 0) + 1;
-      });
-
-      const categoryResults =
-        Object.values(categoryMap)
-          .filter(function (category) {
-            return category.count > 0;
-          })
-          .sort(function (a, b) {
-            return b.count - a.count;
+      const groups =
+        Object.values(groupMap)
+          .filter(function (group) {
+            return group.objects.length > 0;
           });
 
-      const otherClasses =
-        Object.entries(classCounts)
-          .filter(function (entry) {
-            return (
-              entry[0] !== "Onbekende klasse" &&
-              !findCategory(entry[0])
-            );
-          })
+      let subgroupCount = 0;
+
+      groups.forEach(function (group) {
+        group.subgroups =
+          createSubgroups(
+            group.objects
+          );
+
+        subgroupCount +=
+          group.subgroups.length;
+      });
+
+      groups.sort(function (a, b) {
+        return (
+          b.objects.length -
+          a.objects.length
+        );
+      });
+
+      const propertyCounter = {};
+
+      preparedObjects.forEach(function (object) {
+        Object.keys(object.flatProperties)
+          .forEach(function (propertyName) {
+            propertyCounter[propertyName] =
+              (propertyCounter[propertyName] || 0) + 1;
+          });
+      });
+
+      const commonProperties =
+        Object.entries(propertyCounter)
           .sort(function (a, b) {
             return b[1] - a[1];
-          });
+          })
+          .slice(0, 60);
+
+      const unclassifiedGroup =
+        groups.find(function (group) {
+          return group.key === "other";
+        });
 
       return {
-        totalObjects: objects.length,
-        unknownCount,
-        categories: categoryResults,
-        otherClasses
+        objectCount:
+          preparedObjects.length,
+        groups,
+        subgroupCount,
+        commonProperties,
+        unclassifiedCount:
+          unclassifiedGroup
+            ? unclassifiedGroup.objects.length
+            : 0
       };
     }
 
-    function getObjectClass(object) {
+    function prepareObject(object, index) {
+      const flatProperties =
+        flattenObjectProperties(object);
+
+      const directClass =
+        firstUsefulText([
+          object && object.class,
+          object && object.className,
+          object && object.ifcClass,
+          object && object.entityType,
+          object && object.objectType,
+          object && object.type,
+          object &&
+            object.product &&
+            object.product.class,
+          object &&
+            object.product &&
+            object.product.objectType,
+          object &&
+            object.product &&
+            object.product.type
+        ]);
+
+      const name =
+        firstUsefulText([
+          object && object.name,
+          object && object.title,
+          object && object.label,
+          object &&
+            object.product &&
+            object.product.name,
+          getPropertyValue(
+            flatProperties,
+            [
+              "name",
+              "naam",
+              "objectname",
+              "type name",
+              "typename",
+              "family and type"
+            ]
+          )
+        ]) ||
+        "Object " +
+        (
+          object &&
+          (
+            object.id ||
+            object.runtimeId ||
+            index + 1
+          )
+        );
+
+      const objectType =
+        firstUsefulText([
+          object && object.objectType,
+          object && object.type,
+          object &&
+            object.product &&
+            object.product.objectType,
+          getPropertyValue(
+            flatProperties,
+            [
+              "objecttype",
+              "object type",
+              "type",
+              "typename",
+              "type name",
+              "family",
+              "family and type"
+            ]
+          )
+        ]);
+
+      const material =
+        getPropertyValue(
+          flatProperties,
+          [
+            "material",
+            "materiaal",
+            "material name",
+            "materialname",
+            "structural material",
+            "layer material"
+          ]
+        );
+
+      const level =
+        getPropertyValue(
+          flatProperties,
+          [
+            "level",
+            "niveau",
+            "storey",
+            "building storey",
+            "reference level",
+            "base level"
+          ]
+        );
+
+      const description =
+        firstUsefulText([
+          object && object.description,
+          object &&
+            object.product &&
+            object.product.description,
+          getPropertyValue(
+            flatProperties,
+            [
+              "description",
+              "omschrijving",
+              "type description"
+            ]
+          )
+        ]);
+
+      const classification =
+        getPropertyValue(
+          flatProperties,
+          [
+            "classification",
+            "classificatie",
+            "assembly code",
+            "omniclass",
+            "uniclass",
+            "nl/sfb",
+            "nlsfb",
+            "category",
+            "categorie"
+          ]
+        );
+
+      const dimensions =
+        collectDimensionProperties(
+          flatProperties
+        );
+
+      const searchableParts = [
+        directClass,
+        name,
+        objectType,
+        material,
+        description,
+        classification,
+        level
+      ];
+
+      Object.entries(flatProperties)
+        .slice(0, 120)
+        .forEach(function (entry) {
+          searchableParts.push(
+            entry[0],
+            entry[1]
+          );
+        });
+
+      const searchText =
+        normalizeSearchText(
+          searchableParts
+            .filter(Boolean)
+            .join(" ")
+        );
+
+      return {
+        source: object,
+        index,
+        id:
+          object &&
+          (
+            object.id ||
+            object.runtimeId ||
+            object.objectRuntimeId ||
+            index + 1
+          ),
+        directClass,
+        name,
+        objectType,
+        material,
+        level,
+        description,
+        classification,
+        dimensions,
+        flatProperties,
+        searchText
+      };
+    }
+
+    function determineCoarseGroup(object) {
+      let bestGroup =
+        coarseGroupDefinitions[
+          coarseGroupDefinitions.length - 1
+        ];
+
+      let bestScore = 0;
+
+      coarseGroupDefinitions.forEach(
+        function (group) {
+          if (group.key === "other") {
+            return;
+          }
+
+          let score = 0;
+
+          group.keywords.forEach(
+            function (keyword) {
+              const normalizedKeyword =
+                normalizeSearchText(keyword);
+
+              if (
+                object.searchText.includes(
+                  normalizedKeyword
+                )
+              ) {
+                score +=
+                  normalizedKeyword.length >= 8
+                    ? 4
+                    : 2;
+              }
+            }
+          );
+
+          if (
+            object.directClass &&
+            group.keywords.some(
+              function (keyword) {
+                return normalizeSearchText(
+                  object.directClass
+                ).includes(
+                  normalizeSearchText(keyword)
+                );
+              }
+            )
+          ) {
+            score += 6;
+          }
+
+          if (
+            object.objectType &&
+            group.keywords.some(
+              function (keyword) {
+                return normalizeSearchText(
+                  object.objectType
+                ).includes(
+                  normalizeSearchText(keyword)
+                );
+              }
+            )
+          ) {
+            score += 4;
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestGroup = group;
+          }
+        }
+      );
+
+      return bestGroup;
+    }
+
+    function createSubgroups(objects) {
+      const subgroupMap = {};
+
+      objects.forEach(function (object) {
+        const subgroupName =
+          determineSubgroupName(object);
+
+        const key =
+          normalizeSearchText(
+            subgroupName
+          ) || "zonder-type";
+
+        if (!subgroupMap[key]) {
+          subgroupMap[key] = {
+            key,
+            name: subgroupName,
+            objects: [],
+            classes: {},
+            materials: {},
+            levels: {},
+            dimensions: {}
+          };
+        }
+
+        const subgroup =
+          subgroupMap[key];
+
+        subgroup.objects.push(object);
+
+        addCounterValue(
+          subgroup.classes,
+          object.directClass
+        );
+
+        addCounterValue(
+          subgroup.materials,
+          object.material
+        );
+
+        addCounterValue(
+          subgroup.levels,
+          object.level
+        );
+
+        object.dimensions
+          .forEach(function (dimension) {
+            addCounterValue(
+              subgroup.dimensions,
+              dimension
+            );
+          });
+      });
+
+      return Object.values(subgroupMap)
+        .map(function (subgroup) {
+          return {
+            key: subgroup.key,
+            name: subgroup.name,
+            count:
+              subgroup.objects.length,
+            objects:
+              subgroup.objects,
+            topClasses:
+              topCounterEntries(
+                subgroup.classes,
+                3
+              ),
+            topMaterials:
+              topCounterEntries(
+                subgroup.materials,
+                3
+              ),
+            topLevels:
+              topCounterEntries(
+                subgroup.levels,
+                3
+              ),
+            topDimensions:
+              topCounterEntries(
+                subgroup.dimensions,
+                4
+              )
+          };
+        })
+        .sort(function (a, b) {
+          return b.count - a.count;
+        });
+    }
+
+    function determineSubgroupName(object) {
+      const candidates = [
+        object.objectType,
+        getPropertyValue(
+          object.flatProperties,
+          [
+            "type name",
+            "typename",
+            "type",
+            "family and type",
+            "family type",
+            "type mark",
+            "typemark"
+          ]
+        ),
+        object.name,
+        object.directClass,
+        object.classification,
+        object.material
+      ];
+
+      const selected =
+        firstUsefulText(candidates);
+
+      if (!selected) {
+        return "Zonder herkenbaar type";
+      }
+
+      return cleanGroupName(selected);
+    }
+
+    function flattenObjectProperties(object) {
+      const result = {};
+
       if (
         !object ||
         typeof object !== "object"
       ) {
-        return "Onbekende klasse";
+        return result;
       }
 
-      const directValues = [
-        object.class,
-        object.className,
-        object.ifcClass,
-        object.entityType,
-        object.objectType,
-        object.type
+      const containers = [
+        object.properties,
+        object.propertySets,
+        object.propertysets,
+        object.sets
       ];
 
-      for (const value of directValues) {
-        const text = readText(value);
+      containers.forEach(function (container) {
+        flattenPropertyContainer(
+          container,
+          result,
+          ""
+        );
+      });
 
-        if (text) {
-          return text;
+      const directFields = [
+        "class",
+        "className",
+        "ifcClass",
+        "entityType",
+        "objectType",
+        "type",
+        "name",
+        "description"
+      ];
+
+      directFields.forEach(function (field) {
+        if (
+          object[field] !== undefined
+        ) {
+          const value =
+            readText(object[field]);
+
+          if (value) {
+            result[field] = value;
+          }
         }
-      }
+      });
 
       if (
         object.product &&
         typeof object.product === "object"
       ) {
-        const productValues = [
-          object.product.class,
-          object.product.className,
-          object.product.ifcClass,
-          object.product.entityType,
-          object.product.objectType,
-          object.product.type
-        ];
+        Object.entries(object.product)
+          .forEach(function (entry) {
+            const value =
+              readText(entry[1]);
 
-        for (const value of productValues) {
-          const text = readText(value);
-
-          if (text) {
-            return text;
-          }
-        }
+            if (value) {
+              result[
+                "product." + entry[0]
+              ] = value;
+            }
+          });
       }
 
-      const propertyValue =
-        findClassInPropertySets(
-          object.properties
-        );
-
-      return propertyValue ||
-        "Onbekende klasse";
+      return result;
     }
 
-    function findClassInPropertySets(propertySets) {
-      if (!Array.isArray(propertySets)) {
-        return null;
+    function flattenPropertyContainer(
+      value,
+      result,
+      prefix
+    ) {
+      if (
+        value === null ||
+        value === undefined
+      ) {
+        return;
       }
 
-      const acceptedNames = [
-        "class",
-        "classname",
-        "ifcclass",
-        "ifcentity",
-        "entity",
-        "entitytype",
-        "objecttype"
+      if (Array.isArray(value)) {
+        value.forEach(function (item) {
+          flattenPropertyContainer(
+            item,
+            result,
+            prefix
+          );
+        });
+
+        return;
+      }
+
+      if (
+        typeof value !== "object"
+      ) {
+        return;
+      }
+
+      const propertyName =
+        firstUsefulText([
+          value.name,
+          value.key,
+          value.propertyName,
+          value.label
+        ]);
+
+      const propertyValue =
+        readText(
+          value.value ??
+          value.displayValue ??
+          value.nominalValue ??
+          value.formattedValue
+        );
+
+      if (
+        propertyName &&
+        propertyValue
+      ) {
+        const key =
+          prefix
+            ? prefix + "." + propertyName
+            : propertyName;
+
+        addFlatProperty(
+          result,
+          key,
+          propertyValue
+        );
+      }
+
+      const setName =
+        firstUsefulText([
+          value.setName,
+          value.propertySetName,
+          value.groupName
+        ]);
+
+      const nextPrefix =
+        setName ||
+        prefix;
+
+      const nestedKeys = [
+        "properties",
+        "values",
+        "items",
+        "children",
+        "propertySets",
+        "sets"
       ];
 
-      for (const propertySet of propertySets) {
+      nestedKeys.forEach(function (key) {
         if (
-          !propertySet ||
-          typeof propertySet !== "object"
+          value[key] !== undefined
         ) {
-          continue;
+          flattenPropertyContainer(
+            value[key],
+            result,
+            nextPrefix
+          );
         }
+      });
 
-        const arrays = [
-          propertySet.properties,
-          propertySet.values,
-          propertySet.items
-        ];
+      Object.entries(value)
+        .forEach(function (entry) {
+          const key = entry[0];
+          const nestedValue = entry[1];
 
-        for (const propertyArray of arrays) {
-          if (!Array.isArray(propertyArray)) {
-            continue;
+          if (
+            nestedKeys.includes(key) ||
+            [
+              "name",
+              "key",
+              "propertyName",
+              "label",
+              "value",
+              "displayValue",
+              "nominalValue",
+              "formattedValue",
+              "setName",
+              "propertySetName",
+              "groupName"
+            ].includes(key)
+          ) {
+            return;
           }
 
-          for (const property of propertyArray) {
-            if (
-              !property ||
-              typeof property !== "object"
-            ) {
-              continue;
-            }
-
-            const propertyName =
-              normalizeText(
-                property.name ||
-                property.key ||
-                property.propertyName
-              );
-
-            if (
-              !acceptedNames.includes(
-                propertyName
-              )
-            ) {
-              continue;
-            }
-
-            const propertyValue = readText(
-              property.value ??
-              property.displayValue ??
-              property.nominalValue
+          if (
+            typeof nestedValue === "string" ||
+            typeof nestedValue === "number" ||
+            typeof nestedValue === "boolean"
+          ) {
+            addFlatProperty(
+              result,
+              prefix
+                ? prefix + "." + key
+                : key,
+              String(nestedValue)
             );
-
-            if (propertyValue) {
-              return propertyValue;
-            }
           }
+        });
+    }
+
+    function addFlatProperty(
+      result,
+      key,
+      value
+    ) {
+      const cleanKey =
+        String(key || "").trim();
+
+      const cleanValue =
+        String(value || "").trim();
+
+      if (
+        !cleanKey ||
+        !cleanValue
+      ) {
+        return;
+      }
+
+      if (!result[cleanKey]) {
+        result[cleanKey] =
+          cleanValue;
+      }
+    }
+
+    function getPropertyValue(
+      flatProperties,
+      acceptedNames
+    ) {
+      const normalizedNames =
+        acceptedNames.map(
+          normalizePropertyName
+        );
+
+      const entries =
+        Object.entries(flatProperties);
+
+      for (const entry of entries) {
+        const propertyName =
+          normalizePropertyName(
+            entry[0]
+          );
+
+        if (
+          normalizedNames.includes(
+            propertyName
+          )
+        ) {
+          return entry[1];
+        }
+      }
+
+      for (const entry of entries) {
+        const propertyName =
+          normalizePropertyName(
+            entry[0]
+          );
+
+        const match =
+          normalizedNames.find(
+            function (acceptedName) {
+              return (
+                propertyName.endsWith(
+                  acceptedName
+                ) ||
+                propertyName.includes(
+                  acceptedName
+                )
+              );
+            }
+          );
+
+        if (match) {
+          return entry[1];
         }
       }
 
       return null;
     }
 
-    function renderResult(result) {
+    function collectDimensionProperties(
+      flatProperties
+    ) {
+      const acceptedWords = [
+        "length",
+        "lengte",
+        "width",
+        "breedte",
+        "height",
+        "hoogte",
+        "thickness",
+        "dikte",
+        "diameter",
+        "radius",
+        "area",
+        "oppervlakte",
+        "volume"
+      ];
+
+      return Object.entries(
+        flatProperties
+      )
+        .filter(function (entry) {
+          const normalizedName =
+            normalizePropertyName(
+              entry[0]
+            );
+
+          return acceptedWords.some(
+            function (word) {
+              return normalizedName.includes(
+                normalizePropertyName(word)
+              );
+            }
+          );
+        })
+        .slice(0, 8)
+        .map(function (entry) {
+          const shortName =
+            entry[0].split(".").pop();
+
+          return (
+            shortName +
+            ": " +
+            entry[1]
+          );
+        });
+    }
+
+    function renderAnalysis(analysis) {
       analysisSummary.textContent =
-        formatNumber(result.totalObjects) +
-        " objectproperties onderzocht in " +
+        formatNumber(
+          analysis.objectCount
+        ) +
+        " objecten onderzocht in " +
         getModelName(loadedModel) +
         ".";
 
       propertyCountElement.textContent =
-        formatNumber(result.totalObjects);
+        formatNumber(
+          analysis.objectCount
+        );
 
-      if (result.categories.length === 0) {
-        categoriesList.innerHTML = `
-          <div class="empty-state">
-            Er werden nog geen herkenbare
-            bouwcategorieën gevonden.
-          </div>
-        `;
-      } else {
-        categoriesList.innerHTML =
-          result.categories
-            .map(renderCategory)
-            .join("");
-      }
+      groupCountElement.textContent =
+        formatNumber(
+          analysis.groups.length
+        );
 
-      renderOtherClasses(
-        result.otherClasses
+      subgroupCountElement.textContent =
+        formatNumber(
+          analysis.subgroupCount
+        );
+
+      toolbar.hidden = false;
+
+      renderFilteredGroups();
+      renderCommonProperties(
+        analysis.commonProperties,
+        analysis.objectCount
       );
 
-      renderUnknown(
-        result.unknownCount
+      renderUnclassified(
+        analysis.unclassifiedCount
       );
     }
 
-    function renderCategory(category) {
-      const classLines =
-        Object.entries(category.classes)
-          .sort(function (a, b) {
-            return b[1] - a[1];
+    function renderFilteredGroups() {
+      if (!currentAnalysis) {
+        return;
+      }
+
+      const query =
+        normalizeSearchText(
+          searchInput.value
+        );
+
+      const filteredGroups =
+        currentAnalysis.groups
+          .map(function (group) {
+            if (!query) {
+              return group;
+            }
+
+            const matchingSubgroups =
+              group.subgroups.filter(
+                function (subgroup) {
+                  const text =
+                    normalizeSearchText(
+                      [
+                        group.label,
+                        subgroup.name,
+                        subgroup.topClasses
+                          .map(function (item) {
+                            return item[0];
+                          })
+                          .join(" "),
+                        subgroup.topMaterials
+                          .map(function (item) {
+                            return item[0];
+                          })
+                          .join(" "),
+                        subgroup.topLevels
+                          .map(function (item) {
+                            return item[0];
+                          })
+                          .join(" "),
+                        subgroup.topDimensions
+                          .map(function (item) {
+                            return item[0];
+                          })
+                          .join(" ")
+                      ].join(" ")
+                    );
+
+                  return text.includes(query);
+                }
+              );
+
+            if (
+              normalizeSearchText(
+                group.label
+              ).includes(query)
+            ) {
+              return group;
+            }
+
+            if (
+              matchingSubgroups.length > 0
+            ) {
+              return {
+                ...group,
+                subgroups:
+                  matchingSubgroups
+              };
+            }
+
+            return null;
           })
-          .map(function (entry) {
+          .filter(Boolean);
+
+      if (filteredGroups.length === 0) {
+        groupsList.innerHTML = `
+          <div class="empty-state">
+            Geen groepen gevonden voor deze zoekterm.
+          </div>
+        `;
+
+        return;
+      }
+
+      groupsList.innerHTML =
+        filteredGroups
+          .map(renderGroup)
+          .join("");
+
+      bindGroupToggles();
+    }
+
+    function renderGroup(group) {
+      const subgroupHtml =
+        group.subgroups
+          .map(renderSubgroup)
+          .join("");
+
+      const isOpen =
+        allGroupsExpanded ||
+        Boolean(
+          normalizeSearchText(
+            searchInput.value
+          )
+        );
+
+      return `
+        <article
+          class="group-card"
+          data-group-key="${escapeHtml(group.key)}"
+        >
+          <div class="group-header">
+            <div class="group-icon">
+              ${escapeHtml(group.icon)}
+            </div>
+
+            <div class="group-title">
+              <h3>
+                ${escapeHtml(group.label)}
+              </h3>
+
+              <p>
+                ${formatNumber(group.subgroups.length)}
+                subgroepen
+              </p>
+            </div>
+
+            <strong class="group-count">
+              ${formatNumber(group.objects.length)}
+            </strong>
+          </div>
+
+          <div
+            class="subgroups"
+            ${isOpen ? "" : "hidden"}
+          >
+            ${subgroupHtml}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderSubgroup(subgroup) {
+      const chips = [];
+
+      subgroup.topClasses
+        .forEach(function (item) {
+          chips.push(
+            "Klasse: " +
+            item[0]
+          );
+        });
+
+      subgroup.topMaterials
+        .forEach(function (item) {
+          chips.push(
+            "Materiaal: " +
+            item[0]
+          );
+        });
+
+      subgroup.topLevels
+        .forEach(function (item) {
+          chips.push(
+            "Niveau: " +
+            item[0]
+          );
+        });
+
+      subgroup.topDimensions
+        .forEach(function (item) {
+          chips.push(item[0]);
+        });
+
+      const chipsHtml =
+        chips
+          .slice(0, 8)
+          .map(function (chip) {
             return `
-              <span>
-                ${escapeHtml(entry[0])}:
-                ${formatNumber(entry[1])}
+              <span class="chip">
+                ${escapeHtml(chip)}
               </span>
             `;
           })
           .join("");
 
       return `
-        <article class="category-card">
-          <div class="category-icon">
-            ${escapeHtml(category.icon)}
-          </div>
+        <div class="subgroup-card">
+          <div class="subgroup-top">
+            <div class="subgroup-name">
+              <strong>
+                ${escapeHtml(subgroup.name)}
+              </strong>
 
-          <div class="category-content">
-            <h3>
-              ${escapeHtml(category.label)}
-            </h3>
-
-            <div class="category-classes">
-              ${classLines}
+              <div class="subgroup-meta">
+                Automatisch gegroepeerd op gedeelde
+                type-, naam- en materiaaleigenschappen.
+              </div>
             </div>
+
+            <strong class="subgroup-count">
+              ${formatNumber(subgroup.count)}
+            </strong>
           </div>
 
-          <strong class="category-count">
-            ${formatNumber(category.count)}
-          </strong>
-        </article>
+          ${
+            chipsHtml
+              ? `
+                <div class="chips">
+                  ${chipsHtml}
+                </div>
+              `
+              : ""
+          }
+        </div>
       `;
     }
 
-    function renderOtherClasses(items) {
-      if (items.length === 0) {
-        otherClassesDetails.hidden = true;
-        otherClassesList.innerHTML = "";
+    function bindGroupToggles() {
+      document
+        .querySelectorAll(
+          ".group-header"
+        )
+        .forEach(function (header) {
+          header.addEventListener(
+            "click",
+            function () {
+              const subgroups =
+                header.parentElement
+                  .querySelector(
+                    ".subgroups"
+                  );
+
+              subgroups.hidden =
+                !subgroups.hidden;
+            }
+          );
+        });
+    }
+
+    function toggleAllGroups() {
+      allGroupsExpanded =
+        !allGroupsExpanded;
+
+      expandButton.textContent =
+        allGroupsExpanded
+          ? "Alle groepen sluiten"
+          : "Alle groepen openen";
+
+      document
+        .querySelectorAll(
+          ".subgroups"
+        )
+        .forEach(function (element) {
+          element.hidden =
+            !allGroupsExpanded;
+        });
+    }
+
+    function renderCommonProperties(
+      properties,
+      totalObjects
+    ) {
+      if (properties.length === 0) {
+        propertiesDetails.hidden = true;
+        propertiesList.innerHTML = "";
         return;
       }
 
-      otherClassesDetails.hidden = false;
+      propertiesDetails.hidden = false;
 
-      otherClassesList.innerHTML =
-        items
+      propertiesList.innerHTML =
+        properties
           .map(function (entry) {
+            const percentage =
+              totalObjects > 0
+                ? Math.round(
+                    entry[1] /
+                    totalObjects *
+                    100
+                  )
+                : 0;
+
             return `
-              <div class="class-row">
+              <div class="property-row">
                 <span>
                   ${escapeHtml(entry[0])}
                 </span>
 
                 <strong>
                   ${formatNumber(entry[1])}
+                  ·
+                  ${percentage}%
                 </strong>
               </div>
             `;
@@ -1260,24 +2356,54 @@
           .join("");
     }
 
-    function renderUnknown(count) {
+    function renderUnclassified(count) {
       if (!count) {
-        unknownDetails.hidden = true;
-        unknownList.innerHTML = "";
+        unclassifiedDetails.hidden = true;
+        unclassifiedList.innerHTML = "";
         return;
       }
 
-      unknownDetails.hidden = false;
+      unclassifiedDetails.hidden = false;
 
-      unknownList.innerHTML = `
-        <div class="class-row">
-          <span>Onbekende klasse</span>
+      unclassifiedList.innerHTML = `
+        <div class="property-row">
+          <span>
+            Overige / nog te classificeren
+          </span>
 
           <strong>
             ${formatNumber(count)}
           </strong>
         </div>
       `;
+    }
+
+    function collectRawObjects(groups) {
+      const objects = [];
+
+      groups.forEach(function (group) {
+        const candidates = [
+          group && group.objects,
+          group && group.entities
+        ];
+
+        candidates.forEach(function (candidate) {
+          if (!Array.isArray(candidate)) {
+            return;
+          }
+
+          candidate.forEach(function (item) {
+            if (
+              item &&
+              typeof item === "object"
+            ) {
+              objects.push(item);
+            }
+          });
+        });
+      });
+
+      return objects;
     }
 
     function normalizePropertyResponse(response) {
@@ -1297,6 +2423,13 @@
         Array.isArray(response.data)
       ) {
         return response.data;
+      }
+
+      if (
+        response &&
+        Array.isArray(response.properties)
+      ) {
+        return response.properties;
       }
 
       return [];
@@ -1334,30 +2467,31 @@
           continue;
         }
 
-        const ids = candidate
-          .map(function (item) {
-            if (
-              typeof item === "number" ||
-              typeof item === "string"
-            ) {
-              return Number(item);
-            }
+        const ids =
+          candidate
+            .map(function (item) {
+              if (
+                typeof item === "number" ||
+                typeof item === "string"
+              ) {
+                return Number(item);
+              }
 
-            if (
-              item &&
-              typeof item === "object"
-            ) {
-              return Number(
-                item.id ??
-                item.runtimeId ??
-                item.objectRuntimeId ??
-                item.objectId
-              );
-            }
+              if (
+                item &&
+                typeof item === "object"
+              ) {
+                return Number(
+                  item.id ??
+                  item.runtimeId ??
+                  item.objectRuntimeId ??
+                  item.objectId
+                );
+              }
 
-            return NaN;
-          })
-          .filter(Number.isFinite);
+              return NaN;
+            })
+            .filter(Number.isFinite);
 
         if (ids.length > 0) {
           return ids;
@@ -1367,34 +2501,49 @@
       return [];
     }
 
-    function findCategory(className) {
-      const normalized =
-        normalizeText(className);
+    function addCounterValue(
+      counter,
+      value
+    ) {
+      const text =
+        firstUsefulText([value]);
 
-      if (!normalized) {
-        return null;
+      if (!text) {
+        return;
       }
 
-      return categories.find(function (category) {
-        return category.classes.some(
-          function (candidate) {
-            const normalizedCandidate =
-              normalizeText(candidate);
+      counter[text] =
+        (counter[text] || 0) + 1;
+    }
 
-            return (
-              normalized === normalizedCandidate ||
-              normalized.includes(
-                normalizedCandidate
-              )
-            );
-          }
-        );
-      }) || null;
+    function topCounterEntries(
+      counter,
+      limit
+    ) {
+      return Object.entries(counter)
+        .sort(function (a, b) {
+          return b[1] - a[1];
+        })
+        .slice(0, limit);
+    }
+
+    function firstUsefulText(values) {
+      for (const value of values) {
+        const text =
+          readText(value);
+
+        if (text) {
+          return text;
+        }
+      }
+
+      return null;
     }
 
     function readText(value) {
       if (typeof value === "string") {
-        const text = value.trim();
+        const text =
+          value.trim();
 
         return text || null;
       }
@@ -1410,33 +2559,105 @@
         value &&
         typeof value === "object"
       ) {
-        if (
-          value.value !== undefined &&
-          value.value !== value
-        ) {
-          return readText(value.value);
-        }
+        const nestedCandidates = [
+          value.value,
+          value.displayValue,
+          value.nominalValue,
+          value.name,
+          value.label
+        ];
 
-        if (
-          value.name !== undefined &&
-          value.name !== value
+        for (
+          const nestedValue
+          of nestedCandidates
         ) {
-          return readText(value.name);
+          if (
+            nestedValue !== undefined &&
+            nestedValue !== value
+          ) {
+            const text =
+              readText(nestedValue);
+
+            if (text) {
+              return text;
+            }
+          }
         }
       }
 
       return null;
     }
 
-    function isActiveModel(model) {
-      const state = normalizeText(
-        model &&
-        (
-          model.state ||
-          model.status ||
-          model.loadState
+    function cleanGroupName(value) {
+      let text =
+        String(value || "").trim();
+
+      text = text
+        .replace(
+          /\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi,
+          ""
         )
+        .replace(
+          /\b\d{7,}\b/g,
+          ""
+        )
+        .replace(
+          /\s{2,}/g,
+          " "
+        )
+        .replace(
+          /[-_:|]+$/g,
+          ""
+        )
+        .trim();
+
+      return (
+        text ||
+        "Zonder herkenbaar type"
       );
+    }
+
+    function normalizePropertyName(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replaceAll("_", " ")
+        .replaceAll("-", " ")
+        .replaceAll(".", " ")
+        .replaceAll(":", " ")
+        .replace(/\s+/g, " ");
+    }
+
+    function normalizeSearchText(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(
+          /[\u0300-\u036f]/g,
+          ""
+        )
+        .replace(
+          /[^a-z0-9]+/g,
+          " "
+        )
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
+    }
+
+    function isActiveModel(model) {
+      const state =
+        normalizeSearchText(
+          model &&
+          (
+            model.state ||
+            model.status ||
+            model.loadState
+          )
+        );
 
       return Boolean(
         model &&
@@ -1450,14 +2671,15 @@
     }
 
     function isLoadedModel(model) {
-      const state = normalizeText(
-        model &&
-        (
-          model.state ||
-          model.status ||
-          model.loadState
-        )
-      );
+      const state =
+        normalizeSearchText(
+          model &&
+          (
+            model.state ||
+            model.status ||
+            model.loadState
+          )
+        );
 
       return Boolean(
         model &&
@@ -1530,25 +2752,33 @@
     function createSafeSample(object) {
       return {
         id:
-          object && object.id,
-
+          object &&
+          (
+            object.id ||
+            object.runtimeId
+          ),
         class:
           object && object.class,
-
+        name:
+          object && object.name,
+        objectType:
+          object && object.objectType,
         product:
           object && object.product
             ? {
                 name:
                   object.product.name,
-
                 objectType:
                   object.product.objectType,
-
                 description:
                   object.product.description
               }
             : null,
-
+        propertyContainerType:
+          object &&
+          object.properties
+            ? typeof object.properties
+            : null,
         propertySetCount:
           object &&
           Array.isArray(object.properties)
@@ -1570,8 +2800,10 @@
       }
 
       if (
-        eventName === "extension.sessioninvalid" ||
-        eventName === "embed.session.invalid"
+        eventName ===
+          "extension.sessioninvalid" ||
+        eventName ===
+          "embed.session.invalid"
       ) {
         workspaceApi = null;
         loadedModel = null;
@@ -1585,20 +2817,30 @@
     }
 
     function resetAnalysis() {
+      currentAnalysis = null;
+      allGroupsExpanded = false;
+
       analysisCard.hidden = true;
       analysisProgress.hidden = true;
       summaryGrid.hidden = true;
+      toolbar.hidden = true;
 
       analysisSummary.textContent = "";
-      categoriesList.innerHTML = "";
-      otherClassesList.innerHTML = "";
-      unknownList.innerHTML = "";
+      groupsList.innerHTML = "";
+      propertiesList.innerHTML = "";
+      unclassifiedList.innerHTML = "";
 
-      otherClassesDetails.hidden = true;
-      unknownDetails.hidden = true;
+      propertiesDetails.hidden = true;
+      unclassifiedDetails.hidden = true;
 
       runtimeCountElement.textContent = "0";
       propertyCountElement.textContent = "0";
+      groupCountElement.textContent = "0";
+      subgroupCountElement.textContent = "0";
+
+      searchInput.value = "";
+      expandButton.textContent =
+        "Alle groepen openen";
     }
 
     function setStatus(message, type) {
@@ -1630,17 +2872,6 @@
     function formatNumber(value) {
       return Number(value || 0)
         .toLocaleString("nl-BE");
-    }
-
-    function normalizeText(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase()
-        .replaceAll(" ", "")
-        .replaceAll("_", "")
-        .replaceAll("-", "")
-        .replaceAll(".", "")
-        .replaceAll(":", "");
     }
 
     function escapeHtml(value) {
