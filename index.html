@@ -685,291 +685,172 @@
     }
 
     async function analyseLoadedModel() {
-      if (!workspaceApi || !loadedModel || isAnalysing) {
-        return;
-      }
+  if (!workspaceApi || !loadedModel || isAnalysing) {
+    return;
+  }
 
-      isAnalysing = true;
-      analyseButton.disabled = true;
+  isAnalysing = true;
+  analyseButton.disabled = true;
 
-      analysisCard.hidden = false;
-      analysisProgress.hidden = false;
-      categoriesList.innerHTML = "";
-      otherClassesDetails.hidden = true;
-      otherClassesList.innerHTML = "";
+  analysisCard.hidden = false;
+  analysisProgress.hidden = false;
+  categoriesList.innerHTML = "";
+  otherClassesDetails.hidden = true;
+  otherClassesList.innerHTML = "";
 
-      setStatus("Het geladen model wordt geanalyseerd...");
+  setStatus("Het geladen model wordt geanalyseerd...");
 
-      try {
-        const response = await workspaceApi.viewer.getObjects();
-        const modelGroups = Array.isArray(response) ? response : [];
+  try {
+    const modelId = getModelId(loadedModel);
 
-        const loadedModelId = getModelId(loadedModel);
-
-        let matchingGroups = modelGroups.filter(function (group) {
-          return sameId(getGroupModelId(group), loadedModelId);
-        });
-
-        /*
-         * Indien Trimble slechts één objectgroep teruggeeft, nemen we
-         * die groep als veilige terugval. Dit helpt bij modellen waarbij
-         * de model-ID op een iets andere plaats staat.
-         */
-        if (
-          matchingGroups.length === 0 &&
-          modelGroups.length === 1
-        ) {
-          matchingGroups = [modelGroups[0]];
-        }
-
-        if (matchingGroups.length === 0) {
-          throw new Error(
-            "Er werden geen objecten gevonden voor het geladen model."
-          );
-        }
-
-        const analysis = buildAnalysis(matchingGroups);
-
-        renderAnalysis(analysis);
-
-        setStatus(
-          "Analyse van het geladen model voltooid.",
-          "success"
-        );
-
-        showDebug({
-          model: loadedModel,
-          loadedModelId,
-          receivedModelGroups: modelGroups.length,
-          matchingModelGroups: matchingGroups.length,
-          analysis
-        });
-      } catch (error) {
-        console.error("Modelanalyse mislukt:", error);
-
-        analysisSummary.textContent =
-          "De analyse kon niet worden uitgevoerd.";
-
-        categoriesList.innerHTML = `
-          <div class="empty-state">
-            De modelobjecten konden niet worden uitgelezen.
-            Open de technische gegevens voor meer informatie.
-          </div>
-        `;
-
-        setStatus(
-          "De modelanalyse is mislukt.",
-          "error"
-        );
-
-        showDebug({
-          analysisCompleted: false,
-          model: loadedModel,
-          error: getErrorMessage(error)
-        });
-      } finally {
-        analysisProgress.hidden = true;
-        analyseButton.disabled = false;
-        isAnalysing = false;
-      }
+    if (!modelId) {
+      throw new Error(
+        "Het model-ID van het geladen model kon niet worden bepaald."
+      );
     }
 
-    function buildAnalysis(modelGroups) {
-      const categoryResults = {};
-      const allClassCounts = {};
-      let totalObjects = 0;
+    /*
+     * Stap 1:
+     * Vraag de objectgroepen en hun runtime-ID's op.
+     */
+    const groupsResponse =
+      await workspaceApi.viewer.getObjects();
 
-      categoryDefinitions.forEach(function (definition) {
-        categoryResults[definition.key] = {
-          key: definition.key,
-          label: definition.label,
-          icon: definition.icon,
-          count: 0,
-          classes: {}
-        };
-      });
+    const modelGroups = Array.isArray(groupsResponse)
+      ? groupsResponse
+      : [];
 
-      modelGroups.forEach(function (group) {
-        const objects = extractObjects(group);
+    let matchingGroup = modelGroups.find(function (group) {
+      return sameId(
+        getGroupModelId(group),
+        modelId
+      );
+    });
 
-        objects.forEach(function (object) {
-          totalObjects += 1;
-
-          const className = determineObjectClass(object);
-          const category = findCategory(className);
-
-          allClassCounts[className] =
-            (allClassCounts[className] || 0) + 1;
-
-          if (!category) {
-            return;
-          }
-
-          const result = categoryResults[category.key];
-
-          result.count += 1;
-          result.classes[className] =
-            (result.classes[className] || 0) + 1;
-        });
-      });
-
-      const categories = Object.values(categoryResults)
-        .filter(function (category) {
-          return category.count > 0;
-        })
-        .sort(function (a, b) {
-          return b.count - a.count;
-        });
-
-      const otherClasses = Object.entries(allClassCounts)
-        .filter(function (entry) {
-          return !findCategory(entry[0]);
-        })
-        .sort(function (a, b) {
-          return b[1] - a[1];
-        });
-
-      return {
-        totalObjects,
-        categories,
-        otherClasses
-      };
+    /*
+     * Wanneer slechts één modelgroep terugkomt, gebruiken we die
+     * als veilige terugval.
+     */
+    if (!matchingGroup && modelGroups.length === 1) {
+      matchingGroup = modelGroups[0];
     }
 
-    function renderAnalysis(analysis) {
+    if (!matchingGroup) {
+      throw new Error(
+        "Er werd geen objectgroep voor het geladen model gevonden."
+      );
+    }
+
+    const runtimeIds = getRuntimeIds(matchingGroup);
+
+    if (runtimeIds.length === 0) {
+      throw new Error(
+        "Er werden geen runtime object-ID's gevonden."
+      );
+    }
+
+    analysisSummary.textContent =
+      runtimeIds.length.toLocaleString("nl-BE") +
+      " objecteigenschappen worden opgehaald...";
+
+    /*
+     * Stap 2:
+     * Haal de werkelijke properties op in kleinere blokken.
+     * Dit voorkomt dat één zeer grote API-oproep mislukt.
+     */
+    const batchSize = 250;
+    const objectProperties = [];
+
+    for (
+      let startIndex = 0;
+      startIndex < runtimeIds.length;
+      startIndex += batchSize
+    ) {
+      const batch = runtimeIds.slice(
+        startIndex,
+        startIndex + batchSize
+      );
+
+      const batchProperties =
+        await workspaceApi.viewer.getObjectProperties(
+          modelId,
+          batch
+        );
+
+      if (Array.isArray(batchProperties)) {
+        objectProperties.push(...batchProperties);
+      }
+
+      const processed = Math.min(
+        startIndex + batch.length,
+        runtimeIds.length
+      );
+
       analysisSummary.textContent =
-        analysis.totalObjects.toLocaleString("nl-BE") +
-        " objecten onderzocht in " +
-        getModelName(loadedModel) +
-        ".";
-
-      if (analysis.categories.length === 0) {
-        categoriesList.innerHTML = `
-          <div class="empty-state">
-            Er werden geen herkenbare bouwcategorieën gevonden.
-            Bekijk onderaan de andere objectklassen.
-          </div>
-        `;
-      } else {
-        categoriesList.innerHTML = analysis.categories
-          .map(function (category) {
-            const classLines = Object.entries(category.classes)
-              .sort(function (a, b) {
-                return b[1] - a[1];
-              })
-              .map(function (entry) {
-                return `
-                  <span>
-                    ${escapeHtml(entry[0])}:
-                    ${Number(entry[1]).toLocaleString("nl-BE")}
-                  </span>
-                `;
-              })
-              .join("");
-
-            return `
-              <article class="category-card">
-                <div class="category-icon">
-                  ${escapeHtml(category.icon)}
-                </div>
-
-                <div class="category-content">
-                  <h3>${escapeHtml(category.label)}</h3>
-
-                  <div class="category-classes">
-                    ${classLines}
-                  </div>
-                </div>
-
-                <strong class="category-count">
-                  ${category.count.toLocaleString("nl-BE")}
-                </strong>
-              </article>
-            `;
-          })
-          .join("");
-      }
-
-      if (analysis.otherClasses.length > 0) {
-        otherClassesDetails.hidden = false;
-
-        otherClassesList.innerHTML = analysis.otherClasses
-          .map(function (entry) {
-            return `
-              <div class="other-class-row">
-                <span>${escapeHtml(entry[0])}</span>
-
-                <strong>
-                  ${Number(entry[1]).toLocaleString("nl-BE")}
-                </strong>
-              </div>
-            `;
-          })
-          .join("");
-      } else {
-        otherClassesDetails.hidden = true;
-      }
+        processed.toLocaleString("nl-BE") +
+        " van " +
+        runtimeIds.length.toLocaleString("nl-BE") +
+        " objecten uitgelezen...";
     }
 
-    function extractObjects(group) {
-      if (Array.isArray(group?.objects)) {
-        return group.objects;
-      }
-
-      if (Array.isArray(group?.objectRuntimeIds)) {
-        return group.objectRuntimeIds.map(function (id) {
-          return {
-            id,
-            class: "Onbekende klasse"
-          };
-        });
-      }
-
-      if (Array.isArray(group?.entities)) {
-        return group.entities;
-      }
-
-      return [];
+    if (objectProperties.length === 0) {
+      throw new Error(
+        "Trimble Connect gaf geen objectproperties terug."
+      );
     }
 
-    function determineObjectClass(object) {
-      const candidates = [
-        object?.class,
-        object?.className,
-        object?.type,
-        object?.objectType,
-        object?.product?.class,
-        object?.product?.className,
-        object?.product?.objectType,
-        object?.product?.type,
-        object?.product?.name
-      ];
+    /*
+     * Stap 3:
+     * Bouw de categorieanalyse op de echte objectproperties.
+     */
+    const analysis = buildAnalysisFromProperties(
+      objectProperties
+    );
 
-      const className = candidates.find(function (value) {
-        return typeof value === "string" && value.trim() !== "";
-      });
+    renderAnalysis(analysis);
 
-      return className || "Onbekende klasse";
-    }
+    setStatus(
+      "Analyse van het geladen model voltooid.",
+      "success"
+    );
 
-    function findCategory(className) {
-      const normalizedClass = normalizeText(className);
+    showDebug({
+      model: loadedModel,
+      modelId,
+      runtimeIdCount: runtimeIds.length,
+      propertyCount: objectProperties.length,
+      sampleObject: objectProperties[0] || null,
+      analysis
+    });
+  } catch (error) {
+    console.error("Modelanalyse mislukt:", error);
 
-      if (!normalizedClass) {
-        return null;
-      }
+    analysisSummary.textContent =
+      "De analyse kon niet worden uitgevoerd.";
 
-      return categoryDefinitions.find(function (category) {
-        return category.names.some(function (candidate) {
-          const normalizedCandidate = normalizeText(candidate);
+    categoriesList.innerHTML = `
+      <div class="empty-state">
+        De objecteigenschappen konden niet worden uitgelezen.
+        Open de technische gegevens voor meer informatie.
+      </div>
+    `;
 
-          return (
-            normalizedClass === normalizedCandidate ||
-            normalizedClass.includes(normalizedCandidate)
-          );
-        });
-      }) || null;
-    }
+    setStatus(
+      "De modelanalyse is mislukt.",
+      "error"
+    );
+
+    showDebug({
+      analysisCompleted: false,
+      model: loadedModel,
+      error: getErrorMessage(error)
+    });
+  } finally {
+    analysisProgress.hidden = true;
+    analyseButton.disabled = false;
+    isAnalysing = false;
+  }
+}
 
     function isExplicitlyActiveModel(model) {
       const state = normalizeText(
