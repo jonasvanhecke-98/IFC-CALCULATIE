@@ -169,21 +169,6 @@ dd {
   overflow-wrap: anywhere;
 }
 
-.models-list {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.model-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid #dce3e7;
-  border-radius: 7px;
-  background: #ffffff;
-  cursor: pointer;
 }
 
 .model-item:hover {
@@ -197,31 +182,13 @@ dd {
   flex: 0 0 auto;
 }
 
-.model-information {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-}
-
 .model-information strong {
   overflow-wrap: anywhere;
-}
-
-.model-meta {
-  color: #687782;
-  font-size: 12px;
 }
 
 .loaded-state {
   color: #16743a;
   font-weight: 700;
-}
-
-.model-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 10px;
 }
 
 .progress {
@@ -358,4 +325,13 @@ pre {
     width: 32px;
     height: 32px;
   }
+}
+.active-model-name {
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid #dce3e7;
+  border-radius: 7px;
+  background: #ffffff;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
