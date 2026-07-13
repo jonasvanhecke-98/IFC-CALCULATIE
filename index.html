@@ -10,7 +10,277 @@
 
   <title>IFC Calculatietool</title>
 
-  <link rel="stylesheet" href="./style.css">
+  <style>
+    :root {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1d2d38;
+      background: #eef1f3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 280px;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .app {
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.15;
+    }
+
+    .intro {
+      margin: 12px 0 0;
+      color: #52636e;
+      line-height: 1.5;
+    }
+
+    .panel {
+      padding: 16px;
+      border: 1px solid #d6dee3;
+      border-radius: 10px;
+      background: #ffffff;
+    }
+
+    .status {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 7px;
+      background: #edf2f5;
+      line-height: 1.45;
+    }
+
+    .status.success {
+      background: #e6f4ea;
+      color: #176b35;
+    }
+
+    .status.warning {
+      background: #fff5d6;
+      color: #715500;
+    }
+
+    .status.error {
+      background: #fdeaea;
+      color: #981b1b;
+    }
+
+    .main-button {
+      width: 100%;
+      padding: 11px 15px;
+      border: 0;
+      border-radius: 7px;
+      background: #263b4a;
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .main-button:hover {
+      background: #192c39;
+    }
+
+    .main-button:disabled {
+      cursor: wait;
+      opacity: 0.55;
+    }
+
+    .card {
+      margin-top: 16px;
+      padding: 15px;
+      border: 1px solid #dce3e7;
+      border-radius: 8px;
+      background: #f8fafb;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .model-name {
+      margin: 12px 0;
+      padding: 11px 12px;
+      border: 1px solid #d9e1e5;
+      border-radius: 7px;
+      background: #ffffff;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .muted {
+      margin: 5px 0 0;
+      color: #687985;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 13px 0;
+      padding: 12px;
+      border-radius: 7px;
+      background: #edf2f5;
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      border: 2px solid #c5d0d6;
+      border-top-color: #263b4a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .categories-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .category-card {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #dce3e7;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .category-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 7px;
+      background: #e8eef1;
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .category-content {
+      min-width: 0;
+    }
+
+    .category-content h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+    }
+
+    .category-classes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px 8px;
+      color: #687985;
+      font-size: 11px;
+    }
+
+    .category-count {
+      font-size: 18px;
+    }
+
+    .empty-state {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px dashed #bac7ce;
+      border-radius: 7px;
+      color: #687985;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .other-classes {
+      margin-top: 14px;
+    }
+
+    .other-classes summary,
+    .debug summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .other-class-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e7ea;
+      font-size: 13px;
+    }
+
+    .debug {
+      margin-top: 18px;
+    }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 12px;
+      overflow: auto;
+      border-radius: 7px;
+      background: #15212a;
+      color: #ffffff;
+      font-size: 11px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 340px) {
+      .app {
+        padding: 10px;
+      }
+
+      .panel {
+        padding: 12px;
+      }
+
+      .category-card {
+        grid-template-columns: 32px minmax(0, 1fr) auto;
+      }
+
+      .category-icon {
+        width: 32px;
+        height: 32px;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -18,41 +288,48 @@
     <header class="header">
       <p class="eyebrow">IFC CALCULATIE</p>
 
-      <h1>Trimble Connect modelanalyse</h1>
+      <h1>Modelanalyse</h1>
 
       <p class="intro">
-        Analyseer het actieve model in de Trimble Connect Viewer.
+        Analyseer het model dat momenteel geladen is in de
+        Trimble Connect 3D Viewer.
       </p>
     </header>
 
     <section class="panel">
       <div id="status" class="status">
-        Extensie wordt gestart...
+        Verbinding met Trimble Connect wordt gestart...
       </div>
 
-      <button id="connect-button" type="button">
-        Verbinden met Trimble Connect
+      <button
+        id="connect-button"
+        class="main-button"
+        type="button"
+      >
+        Opnieuw verbinden
       </button>
 
       <section id="model-card" class="card" hidden>
-        <h2>Actief model</h2>
+        <h2>Geladen model</h2>
 
-        <p id="active-model-name" class="active-model-name">
-          Geen actief model gevonden.
+        <p id="model-name" class="model-name">
+          Geen geladen model gevonden.
         </p>
 
-        <button id="analyse-button" type="button">
-          Analyseer actief model
+        <button
+          id="analyse-button"
+          class="main-button"
+          type="button"
+          disabled
+        >
+          Analyseer geladen model
         </button>
       </section>
 
       <section id="analysis-card" class="card" hidden>
-        <div class="section-heading">
-          <div>
-            <h2>Modelanalyse</h2>
-            <p id="analysis-summary" class="muted"></p>
-          </div>
-        </div>
+        <h2>Modelanalyse</h2>
+
+        <p id="analysis-summary" class="muted"></p>
 
         <div id="analysis-progress" class="progress" hidden>
           <div class="spinner"></div>
@@ -61,15 +338,19 @@
 
         <div id="categories-list" class="categories-list"></div>
 
-        <details id="other-classes-details" class="other-classes" hidden>
-          <summary>Andere IFC-klassen</summary>
+        <details
+          id="other-classes-details"
+          class="other-classes"
+          hidden
+        >
+          <summary>Andere objectklassen</summary>
           <div id="other-classes-list"></div>
         </details>
       </section>
 
       <details class="debug">
         <summary>Technische gegevens</summary>
-        <pre id="result">Nog geen gegevens.</pre>
+        <pre id="debug-result">Nog geen gegevens.</pre>
       </details>
     </section>
   </main>
@@ -81,10 +362,9 @@
   <script>
     const statusElement = document.getElementById("status");
     const connectButton = document.getElementById("connect-button");
-    const resultElement = document.getElementById("result");
 
     const modelCard = document.getElementById("model-card");
-    const activeModelName = document.getElementById("active-model-name");
+    const modelNameElement = document.getElementById("model-name");
     const analyseButton = document.getElementById("analyse-button");
 
     const analysisCard = document.getElementById("analysis-card");
@@ -100,8 +380,10 @@
       "other-classes-list"
     );
 
+    const debugResult = document.getElementById("debug-result");
+
     let workspaceApi = null;
-    let activeModel = null;
+    let loadedModel = null;
     let isConnecting = false;
     let isAnalysing = false;
 
@@ -110,131 +392,160 @@
         key: "walls",
         label: "Wanden",
         icon: "▥",
-        classes: [
-          "IfcWall",
-          "IfcWallStandardCase",
-          "Wall",
-          "WallStandardCase"
+        names: [
+          "ifcwall",
+          "ifcwallstandardcase",
+          "wall",
+          "wallstandardcase"
         ]
       },
       {
-        key: "floors",
+        key: "slabs",
         label: "Vloeren en platen",
         icon: "▰",
-        classes: [
-          "IfcSlab",
-          "Slab",
-          "Floor"
+        names: [
+          "ifcslab",
+          "slab",
+          "floor",
+          "floors"
         ]
       },
       {
         key: "roofs",
         label: "Daken",
         icon: "⌂",
-        classes: [
-          "IfcRoof",
-          "Roof"
+        names: [
+          "ifcroof",
+          "roof"
         ]
       },
       {
         key: "beams",
         label: "Liggers",
         icon: "▬",
-        classes: [
-          "IfcBeam",
-          "Beam"
+        names: [
+          "ifcbeam",
+          "beam"
         ]
       },
       {
         key: "columns",
         label: "Kolommen",
         icon: "▮",
-        classes: [
-          "IfcColumn",
-          "Column"
+        names: [
+          "ifccolumn",
+          "column"
         ]
       },
       {
         key: "foundations",
         label: "Funderingen",
         icon: "▱",
-        classes: [
-          "IfcFooting",
-          "IfcPile",
-          "Footing",
-          "Pile"
+        names: [
+          "ifcfooting",
+          "ifcpile",
+          "footing",
+          "pile",
+          "foundation"
         ]
       },
       {
         key: "doors",
         label: "Deuren",
         icon: "▯",
-        classes: [
-          "IfcDoor",
-          "Door"
+        names: [
+          "ifcdoor",
+          "door"
         ]
       },
       {
         key: "windows",
         label: "Ramen",
         icon: "▦",
-        classes: [
-          "IfcWindow",
-          "Window"
+        names: [
+          "ifcwindow",
+          "window"
         ]
       },
       {
         key: "coverings",
         label: "Afwerkingen en plafonds",
         icon: "▤",
-        classes: [
-          "IfcCovering",
-          "Covering",
-          "Ceiling"
+        names: [
+          "ifccovering",
+          "covering",
+          "ceiling"
         ]
       },
       {
         key: "stairs",
         label: "Trappen",
         icon: "▟",
-        classes: [
-          "IfcStair",
-          "IfcStairFlight",
-          "Stair",
-          "StairFlight"
+        names: [
+          "ifcstair",
+          "ifcstairflight",
+          "stair",
+          "stairflight"
         ]
       },
       {
         key: "members",
         label: "Profielen en onderdelen",
         icon: "╫",
-        classes: [
-          "IfcMember",
-          "IfcPlate",
-          "Member",
-          "Plate"
+        names: [
+          "ifcmember",
+          "ifcplate",
+          "member",
+          "plate"
         ]
       },
       {
         key: "spaces",
         label: "Ruimtes",
         icon: "□",
-        classes: [
-          "IfcSpace",
-          "Space"
+        names: [
+          "ifcspace",
+          "space"
+        ]
+      },
+      {
+        key: "railings",
+        label: "Leuningen",
+        icon: "╥",
+        names: [
+          "ifcrailing",
+          "railing"
+        ]
+      },
+      {
+        key: "curtainwalls",
+        label: "Gordijngevels",
+        icon: "▦",
+        names: [
+          "ifccurtainwall",
+          "curtainwall"
+        ]
+      },
+      {
+        key: "buildingelements",
+        label: "Overige bouwelementen",
+        icon: "◇",
+        names: [
+          "ifcbuildingelementproxy",
+          "buildingelementproxy"
         ]
       }
     ];
 
     connectButton.addEventListener("click", connectToTrimble);
-    analyseButton.addEventListener("click", analyseActiveModel);
+    analyseButton.addEventListener("click", analyseLoadedModel);
 
-    window.addEventListener("load", () => {
+    window.addEventListener("load", function () {
       if (window.parent !== window) {
         connectToTrimble();
       } else {
         setStatus(
-          "De website werkt. Open deze pagina als extensie binnen Trimble Connect.",
+          "De website werkt. Open deze pagina als extensie in Trimble Connect.",
           "warning"
         );
       }
@@ -247,13 +558,14 @@
 
       isConnecting = true;
       connectButton.disabled = true;
+      analyseButton.disabled = true;
 
       setStatus("Bezig met verbinden met Trimble Connect...");
 
       try {
         if (!window.TrimbleConnectWorkspace) {
           throw new Error(
-            "De Trimble Connect Workspace API werd niet geladen."
+            "De Trimble Connect Workspace API kon niet worden geladen."
           );
         }
 
@@ -269,9 +581,13 @@
           "success"
         );
 
-        await loadActiveModel();
+        await detectLoadedModel();
       } catch (error) {
         console.error("Verbindingsfout:", error);
+
+        workspaceApi = null;
+        loadedModel = null;
+        modelCard.hidden = true;
 
         setStatus(
           "Geen verbinding. Open de tool als extensie in de Trimble Connect 3D Viewer.",
@@ -280,7 +596,9 @@
 
         showDebug({
           connected: false,
-          error: getErrorMessage(error)
+          error: getErrorMessage(error),
+          insideTrimbleIframe: window.parent !== window,
+          page: window.location.href
         });
       } finally {
         connectButton.disabled = false;
@@ -288,146 +606,165 @@
       }
     }
 
-    async function loadActiveModel() {
+    async function detectLoadedModel() {
       if (!workspaceApi) {
         return;
       }
 
       try {
-        const models = await workspaceApi.viewer.getModels();
-        const modelList = Array.isArray(models) ? models : [];
+        const response = await workspaceApi.viewer.getModels();
+        const models = Array.isArray(response) ? response : [];
 
-        activeModel =
-          modelList.find(model => isActiveModel(model)) ||
-          modelList.find(model => isLoadedModel(model)) ||
-          modelList[0] ||
-          null;
+        /*
+         * Trimble kan de toestand op verschillende manieren teruggeven.
+         * We zoeken eerst een actief model, daarna een zichtbaar/geladen
+         * model. Wanneer er slechts één model beschikbaar is, gebruiken
+         * we dat model als laatste veilige terugval.
+         */
+        loadedModel =
+          models.find(isExplicitlyActiveModel) ||
+          models.find(isVisibleOrLoadedModel) ||
+          (models.length === 1 ? models[0] : null);
 
         modelCard.hidden = false;
 
-        if (!activeModel) {
-          activeModelName.textContent =
-            "Geen actief of geladen model gevonden.";
+        if (!loadedModel) {
+          modelNameElement.textContent =
+            "Geen eenduidig geladen model gevonden.";
 
           analyseButton.disabled = true;
 
           setStatus(
-            "Open of activeer eerst een model in de 3D Viewer.",
+            "Laad of toon één model in de 3D Viewer en probeer opnieuw.",
             "warning"
           );
 
           showDebug({
             connected: true,
-            models: modelList,
-            activeModel: null
+            detectedModel: null,
+            availableModels: models
           });
 
           return;
         }
 
-        activeModelName.textContent =
-          activeModel.name ||
-          activeModel.title ||
-          "Naamloos model";
+        modelNameElement.textContent =
+          getModelName(loadedModel);
 
         analyseButton.disabled = false;
 
         showDebug({
           connected: true,
-          activeModel
+          detectedModel: loadedModel,
+          availableModelCount: models.length
         });
       } catch (error) {
-        console.error("Actief model kon niet worden bepaald:", error);
+        console.error(
+          "Het geladen model kon niet worden bepaald:",
+          error
+        );
+
+        loadedModel = null;
+        modelCard.hidden = false;
+        modelNameElement.textContent =
+          "Het geladen model kon niet worden bepaald.";
+
+        analyseButton.disabled = true;
 
         setStatus(
-          "Het actieve model kon niet worden bepaald.",
+          "Het geladen model kon niet worden bepaald.",
           "error"
         );
 
         showDebug({
           connected: true,
-          activeModelLoaded: false,
+          detectedModel: null,
           error: getErrorMessage(error)
         });
       }
     }
 
-    async function analyseActiveModel() {
-      if (!workspaceApi || !activeModel || isAnalysing) {
+    async function analyseLoadedModel() {
+      if (!workspaceApi || !loadedModel || isAnalysing) {
         return;
       }
 
       isAnalysing = true;
       analyseButton.disabled = true;
+
       analysisCard.hidden = false;
       analysisProgress.hidden = false;
       categoriesList.innerHTML = "";
       otherClassesDetails.hidden = true;
+      otherClassesList.innerHTML = "";
 
-      setStatus("Het actieve model wordt geanalyseerd...");
+      setStatus("Het geladen model wordt geanalyseerd...");
 
       try {
-        const modelObjects =
-          await workspaceApi.viewer.getObjects();
+        const response = await workspaceApi.viewer.getObjects();
+        const modelGroups = Array.isArray(response) ? response : [];
 
-        const allGroups = Array.isArray(modelObjects)
-          ? modelObjects
-          : [];
+        const loadedModelId = getModelId(loadedModel);
 
-        const activeModelId = String(
-          activeModel.id ||
-          activeModel.modelId ||
-          ""
-        );
-
-        const activeGroup = allGroups.find(group => {
-          const groupModelId = String(
-            group.modelId ||
-            group.id ||
-            ""
-          );
-
-          return groupModelId === activeModelId;
+        let matchingGroups = modelGroups.filter(function (group) {
+          return sameId(getGroupModelId(group), loadedModelId);
         });
 
-        const selectedGroups = activeGroup
-          ? [activeGroup]
-          : [];
+        /*
+         * Indien Trimble slechts één objectgroep teruggeeft, nemen we
+         * die groep als veilige terugval. Dit helpt bij modellen waarbij
+         * de model-ID op een iets andere plaats staat.
+         */
+        if (
+          matchingGroups.length === 0 &&
+          modelGroups.length === 1
+        ) {
+          matchingGroups = [modelGroups[0]];
+        }
 
-        if (selectedGroups.length === 0) {
+        if (matchingGroups.length === 0) {
           throw new Error(
-            "Er werden geen objecten gevonden voor het actieve model."
+            "Er werden geen objecten gevonden voor het geladen model."
           );
         }
 
-        const analysis = buildAnalysis(selectedGroups);
+        const analysis = buildAnalysis(matchingGroups);
 
         renderAnalysis(analysis);
 
         setStatus(
-          "Analyse van het actieve model voltooid.",
+          "Analyse van het geladen model voltooid.",
           "success"
         );
 
         showDebug({
-          activeModel,
-          analysis,
-          matchingGroup: activeGroup
+          model: loadedModel,
+          loadedModelId,
+          receivedModelGroups: modelGroups.length,
+          matchingModelGroups: matchingGroups.length,
+          analysis
         });
       } catch (error) {
-        console.error("Analyse mislukt:", error);
+        console.error("Modelanalyse mislukt:", error);
+
+        analysisSummary.textContent =
+          "De analyse kon niet worden uitgevoerd.";
+
+        categoriesList.innerHTML = `
+          <div class="empty-state">
+            De modelobjecten konden niet worden uitgelezen.
+            Open de technische gegevens voor meer informatie.
+          </div>
+        `;
 
         setStatus(
-          "De modelanalyse is mislukt. Bekijk de technische gegevens.",
+          "De modelanalyse is mislukt.",
           "error"
         );
 
-        analysisSummary.textContent =
-          "Analyse kon niet worden uitgevoerd.";
-
         showDebug({
           analysisCompleted: false,
-          activeModel,
+          model: loadedModel,
           error: getErrorMessage(error)
         });
       } finally {
@@ -438,52 +775,63 @@
     }
 
     function buildAnalysis(modelGroups) {
-      const categoryCounts = {};
-      const classCounts = {};
+      const categoryResults = {};
+      const allClassCounts = {};
       let totalObjects = 0;
 
-      categoryDefinitions.forEach(category => {
-        categoryCounts[category.key] = {
-          label: category.label,
-          icon: category.icon,
+      categoryDefinitions.forEach(function (definition) {
+        categoryResults[definition.key] = {
+          key: definition.key,
+          label: definition.label,
+          icon: definition.icon,
           count: 0,
           classes: {}
         };
       });
 
-      modelGroups.forEach(modelGroup => {
-        const objects = Array.isArray(modelGroup.objects)
-          ? modelGroup.objects
-          : [];
+      modelGroups.forEach(function (group) {
+        const objects = extractObjects(group);
 
-        objects.forEach(object => {
+        objects.forEach(function (object) {
           totalObjects += 1;
 
           const className = determineObjectClass(object);
           const category = findCategory(className);
 
-          classCounts[className] =
-            (classCounts[className] || 0) + 1;
+          allClassCounts[className] =
+            (allClassCounts[className] || 0) + 1;
 
-          if (category) {
-            const target = categoryCounts[category.key];
-
-            target.count += 1;
-            target.classes[className] =
-              (target.classes[className] || 0) + 1;
+          if (!category) {
+            return;
           }
+
+          const result = categoryResults[category.key];
+
+          result.count += 1;
+          result.classes[className] =
+            (result.classes[className] || 0) + 1;
         });
       });
 
-      const otherClasses = Object.entries(classCounts)
-        .filter(([className]) => !findCategory(className))
-        .sort((a, b) => b[1] - a[1]);
+      const categories = Object.values(categoryResults)
+        .filter(function (category) {
+          return category.count > 0;
+        })
+        .sort(function (a, b) {
+          return b.count - a.count;
+        });
+
+      const otherClasses = Object.entries(allClassCounts)
+        .filter(function (entry) {
+          return !findCategory(entry[0]);
+        })
+        .sort(function (a, b) {
+          return b[1] - a[1];
+        });
 
       return {
         totalObjects,
-        categories: Object.values(categoryCounts)
-          .filter(category => category.count > 0)
-          .sort((a, b) => b.count - a.count),
+        categories,
         otherClasses
       };
     }
@@ -491,24 +839,29 @@
     function renderAnalysis(analysis) {
       analysisSummary.textContent =
         analysis.totalObjects.toLocaleString("nl-BE") +
-        " objecten onderzocht.";
+        " objecten onderzocht in " +
+        getModelName(loadedModel) +
+        ".";
 
       if (analysis.categories.length === 0) {
         categoriesList.innerHTML = `
           <div class="empty-state">
-            Er werden nog geen herkenbare bouwcategorieën gevonden.
+            Er werden geen herkenbare bouwcategorieën gevonden.
+            Bekijk onderaan de andere objectklassen.
           </div>
         `;
       } else {
         categoriesList.innerHTML = analysis.categories
-          .map(category => {
-            const classText = Object.entries(category.classes)
-              .sort((a, b) => b[1] - a[1])
-              .map(([className, count]) => {
+          .map(function (category) {
+            const classLines = Object.entries(category.classes)
+              .sort(function (a, b) {
+                return b[1] - a[1];
+              })
+              .map(function (entry) {
                 return `
                   <span>
-                    ${escapeHtml(className)}:
-                    ${count.toLocaleString("nl-BE")}
+                    ${escapeHtml(entry[0])}:
+                    ${Number(entry[1]).toLocaleString("nl-BE")}
                   </span>
                 `;
               })
@@ -524,7 +877,7 @@
                   <h3>${escapeHtml(category.label)}</h3>
 
                   <div class="category-classes">
-                    ${classText}
+                    ${classLines}
                   </div>
                 </div>
 
@@ -541,61 +894,154 @@
         otherClassesDetails.hidden = false;
 
         otherClassesList.innerHTML = analysis.otherClasses
-          .map(([className, count]) => {
+          .map(function (entry) {
             return `
               <div class="other-class-row">
-                <span>${escapeHtml(className)}</span>
-                <strong>${count.toLocaleString("nl-BE")}</strong>
+                <span>${escapeHtml(entry[0])}</span>
+
+                <strong>
+                  ${Number(entry[1]).toLocaleString("nl-BE")}
+                </strong>
               </div>
             `;
           })
           .join("");
+      } else {
+        otherClassesDetails.hidden = true;
       }
     }
 
+    function extractObjects(group) {
+      if (Array.isArray(group?.objects)) {
+        return group.objects;
+      }
+
+      if (Array.isArray(group?.objectRuntimeIds)) {
+        return group.objectRuntimeIds.map(function (id) {
+          return {
+            id,
+            class: "Onbekende klasse"
+          };
+        });
+      }
+
+      if (Array.isArray(group?.entities)) {
+        return group.entities;
+      }
+
+      return [];
+    }
+
     function determineObjectClass(object) {
-      return (
-        object?.class ||
-        object?.product?.objectType ||
-        object?.product?.name ||
-        "Onbekende klasse"
-      );
+      const candidates = [
+        object?.class,
+        object?.className,
+        object?.type,
+        object?.objectType,
+        object?.product?.class,
+        object?.product?.className,
+        object?.product?.objectType,
+        object?.product?.type,
+        object?.product?.name
+      ];
+
+      const className = candidates.find(function (value) {
+        return typeof value === "string" && value.trim() !== "";
+      });
+
+      return className || "Onbekende klasse";
     }
 
     function findCategory(className) {
       const normalizedClass = normalizeText(className);
 
-      return categoryDefinitions.find(category =>
-        category.classes.some(candidate => {
+      if (!normalizedClass) {
+        return null;
+      }
+
+      return categoryDefinitions.find(function (category) {
+        return category.names.some(function (candidate) {
           const normalizedCandidate = normalizeText(candidate);
 
           return (
             normalizedClass === normalizedCandidate ||
-            normalizedClass.includes(normalizedCandidate) ||
-            normalizedCandidate.includes(normalizedClass)
+            normalizedClass.includes(normalizedCandidate)
           );
-        })
-      );
+        });
+      }) || null;
     }
 
-    function isActiveModel(model) {
-      const state = normalizeText(model?.state);
+    function isExplicitlyActiveModel(model) {
+      const state = normalizeText(
+        model?.state ||
+        model?.status ||
+        model?.loadState
+      );
 
       return (
-        state.includes("active") ||
         model?.active === true ||
         model?.isActive === true ||
-        model?.selected === true
+        model?.selected === true ||
+        state.includes("active")
       );
     }
 
-    function isLoadedModel(model) {
-      const state = normalizeText(model?.state);
+    function isVisibleOrLoadedModel(model) {
+      const state = normalizeText(
+        model?.state ||
+        model?.status ||
+        model?.loadState
+      );
 
       return (
-        state.includes("loaded") ||
-        state.includes("visible")
+        model?.visible === true ||
+        model?.isVisible === true ||
+        model?.loaded === true ||
+        model?.isLoaded === true ||
+        state.includes("visible") ||
+        state.includes("loaded")
       );
+    }
+
+    function getModelName(model) {
+      return (
+        model?.name ||
+        model?.title ||
+        model?.fileName ||
+        model?.file?.name ||
+        "Naamloos model"
+      );
+    }
+
+    function getModelId(model) {
+      return (
+        model?.id ||
+        model?.modelId ||
+        model?.fileId ||
+        model?.file?.id ||
+        ""
+      );
+    }
+
+    function getGroupModelId(group) {
+      return (
+        group?.modelId ||
+        group?.model?.id ||
+        group?.id ||
+        ""
+      );
+    }
+
+    function sameId(first, second) {
+      if (first === undefined || first === null) {
+        return false;
+      }
+
+      if (second === undefined || second === null) {
+        return false;
+      }
+
+      return String(first) === String(second);
     }
 
     function normalizeText(value) {
@@ -604,23 +1050,31 @@
         .toLowerCase()
         .replaceAll(" ", "")
         .replaceAll("_", "")
-        .replaceAll("-", "");
+        .replaceAll("-", "")
+        .replaceAll(".", "");
     }
 
     function handleTrimbleEvent(event, data) {
       console.log("Trimble Connect event:", event, data);
 
+      const eventName = String(event || "").toLowerCase();
+
       if (
-        event === "viewer.onModelStateChanged" ||
-        event === "viewer.modelStateChanged"
+        eventName.includes("modelstate") ||
+        eventName.includes("model.state") ||
+        eventName.includes("modelchanged")
       ) {
-        loadActiveModel();
+        detectLoadedModel();
       }
 
       if (
-        event === "extension.sessionInvalid" ||
-        event === "embed.session.invalid"
+        eventName === "extension.sessioninvalid" ||
+        eventName === "embed.session.invalid"
       ) {
+        workspaceApi = null;
+        loadedModel = null;
+        analyseButton.disabled = true;
+
         setStatus(
           "De Trimble Connect-sessie is niet meer geldig.",
           "error"
@@ -628,7 +1082,7 @@
       }
     }
 
-    function setStatus(message, type = "") {
+    function setStatus(message, type) {
       statusElement.textContent = message;
       statusElement.className = "status";
 
@@ -638,7 +1092,7 @@
     }
 
     function showDebug(data) {
-      resultElement.textContent = JSON.stringify(
+      debugResult.textContent = JSON.stringify(
         data,
         null,
         2
