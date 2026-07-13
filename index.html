@@ -35,7 +35,7 @@
         Verbinden met Trimble Connect
       </button>
 
-      <section id="project-card" class="project-card" hidden>
+      <section id="project-card" class="card" hidden>
         <h2>Actief project</h2>
 
         <dl>
@@ -56,6 +56,62 @@
         </dl>
       </section>
 
+      <section id="models-card" class="card" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Modellen</h2>
+            <p id="models-summary" class="muted">
+              Nog geen modellen opgehaald.
+            </p>
+          </div>
+
+          <button
+            id="refresh-models-button"
+            class="button-secondary button-small"
+            type="button"
+          >
+            Vernieuwen
+          </button>
+        </div>
+
+        <div id="models-list" class="models-list"></div>
+
+        <div class="model-actions">
+          <button id="select-all-button" class="button-secondary" type="button">
+            Alles selecteren
+          </button>
+
+          <button id="select-loaded-button" class="button-secondary" type="button">
+            Alleen geladen
+          </button>
+        </div>
+
+        <button id="analyse-button" type="button">
+          Analyseer geselecteerde modellen
+        </button>
+      </section>
+
+      <section id="analysis-card" class="card" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Modelanalyse</h2>
+            <p id="analysis-summary" class="muted"></p>
+          </div>
+        </div>
+
+        <div id="analysis-progress" class="progress" hidden>
+          <div class="spinner"></div>
+          <span>Objecten worden uitgelezen...</span>
+        </div>
+
+        <div id="categories-list" class="categories-list"></div>
+
+        <details id="other-classes-details" class="other-classes" hidden>
+          <summary>Andere IFC-klassen</summary>
+          <div id="other-classes-list"></div>
+        </details>
+      </section>
+
       <details class="debug">
         <summary>Technische gegevens</summary>
         <pre id="result">Nog geen gegevens.</pre>
@@ -67,6 +123,722 @@
     src="https://components.connect.trimble.com/trimble-connect-workspace-api/index.js"
   ></script>
 
-  <script src="./app.js"></script>
+  <script>
+    const statusElement = document.getElementById("status");
+    const connectButton = document.getElementById("connect-button");
+    const resultElement = document.getElementById("result");
+
+    const projectCard = document.getElementById("project-card");
+    const projectName = document.getElementById("project-name");
+    const projectId = document.getElementById("project-id");
+    const projectRegion = document.getElementById("project-region");
+
+    const modelsCard = document.getElementById("models-card");
+    const modelsSummary = document.getElementById("models-summary");
+    const modelsList = document.getElementById("models-list");
+    const refreshModelsButton = document.getElementById(
+      "refresh-models-button"
+    );
+    const selectAllButton = document.getElementById("select-all-button");
+    const selectLoadedButton = document.getElementById(
+      "select-loaded-button"
+    );
+    const analyseButton = document.getElementById("analyse-button");
+
+    const analysisCard = document.getElementById("analysis-card");
+    const analysisSummary = document.getElementById("analysis-summary");
+    const analysisProgress = document.getElementById("analysis-progress");
+    const categoriesList = document.getElementById("categories-list");
+
+    const otherClassesDetails = document.getElementById(
+      "other-classes-details"
+    );
+    const otherClassesList = document.getElementById(
+      "other-classes-list"
+    );
+
+    let workspaceApi = null;
+    let availableModels = [];
+    let isConnecting = false;
+    let isAnalysing = false;
+
+    const categoryDefinitions = [
+      {
+        key: "walls",
+        label: "Wanden",
+        icon: "▥",
+        classes: [
+          "IfcWall",
+          "IfcWallStandardCase",
+          "Wall",
+          "WallStandardCase"
+        ]
+      },
+      {
+        key: "floors",
+        label: "Vloeren en platen",
+        icon: "▰",
+        classes: [
+          "IfcSlab",
+          "Slab",
+          "Floor",
+          "Floors"
+        ]
+      },
+      {
+        key: "roofs",
+        label: "Daken",
+        icon: "⌂",
+        classes: [
+          "IfcRoof",
+          "Roof"
+        ]
+      },
+      {
+        key: "beams",
+        label: "Liggers",
+        icon: "▬",
+        classes: [
+          "IfcBeam",
+          "Beam"
+        ]
+      },
+      {
+        key: "columns",
+        label: "Kolommen",
+        icon: "▮",
+        classes: [
+          "IfcColumn",
+          "Column"
+        ]
+      },
+      {
+        key: "foundations",
+        label: "Funderingen",
+        icon: "▱",
+        classes: [
+          "IfcFooting",
+          "IfcPile",
+          "Footing",
+          "Pile"
+        ]
+      },
+      {
+        key: "doors",
+        label: "Deuren",
+        icon: "▯",
+        classes: [
+          "IfcDoor",
+          "Door"
+        ]
+      },
+      {
+        key: "windows",
+        label: "Ramen",
+        icon: "▦",
+        classes: [
+          "IfcWindow",
+          "Window"
+        ]
+      },
+      {
+        key: "coverings",
+        label: "Afwerkingen en plafonds",
+        icon: "▤",
+        classes: [
+          "IfcCovering",
+          "Covering",
+          "Ceiling"
+        ]
+      },
+      {
+        key: "stairs",
+        label: "Trappen",
+        icon: "▟",
+        classes: [
+          "IfcStair",
+          "IfcStairFlight",
+          "Stair",
+          "StairFlight"
+        ]
+      },
+      {
+        key: "members",
+        label: "Profielen en onderdelen",
+        icon: "╫",
+        classes: [
+          "IfcMember",
+          "IfcPlate",
+          "Member",
+          "Plate"
+        ]
+      },
+      {
+        key: "spaces",
+        label: "Ruimtes",
+        icon: "□",
+        classes: [
+          "IfcSpace",
+          "Space"
+        ]
+      }
+    ];
+
+    connectButton.addEventListener("click", connectToTrimble);
+    refreshModelsButton.addEventListener("click", loadModels);
+    selectAllButton.addEventListener("click", selectAllModels);
+    selectLoadedButton.addEventListener("click", selectLoadedModels);
+    analyseButton.addEventListener("click", analyseSelectedModels);
+
+    window.addEventListener("load", () => {
+      if (window.parent !== window) {
+        connectToTrimble();
+      } else {
+        setStatus(
+          "De website werkt. Open deze pagina als extensie binnen Trimble Connect.",
+          "warning"
+        );
+      }
+    });
+
+    async function connectToTrimble() {
+      if (isConnecting) {
+        return;
+      }
+
+      isConnecting = true;
+      connectButton.disabled = true;
+
+      setStatus("Bezig met verbinden met Trimble Connect...");
+
+      try {
+        if (!window.TrimbleConnectWorkspace) {
+          throw new Error(
+            "De Trimble Connect Workspace API werd niet geladen."
+          );
+        }
+
+        workspaceApi =
+          await window.TrimbleConnectWorkspace.connect(
+            window.parent,
+            handleTrimbleEvent,
+            30000
+          );
+
+        setStatus(
+          "Verbinding met Trimble Connect geslaagd.",
+          "success"
+        );
+
+        await loadProjectInformation();
+        await loadModels();
+      } catch (error) {
+        console.error("Verbindingsfout:", error);
+
+        setStatus(
+          "Geen verbinding. Open de tool als extensie in de Trimble Connect 3D Viewer.",
+          "error"
+        );
+
+        showDebug({
+          connected: false,
+          error: getErrorMessage(error),
+          location: window.location.href,
+          insideIframe: window.parent !== window
+        });
+      } finally {
+        connectButton.disabled = false;
+        isConnecting = false;
+      }
+    }
+
+    async function loadProjectInformation() {
+      if (!workspaceApi) {
+        throw new Error("Workspace API is nog niet verbonden.");
+      }
+
+      const project = await workspaceApi.project.getProject();
+
+      projectCard.hidden = false;
+
+      projectName.textContent =
+        project?.name ||
+        project?.title ||
+        "Naam niet beschikbaar";
+
+      projectId.textContent =
+        project?.id ||
+        project?.projectId ||
+        "ID niet beschikbaar";
+
+      projectRegion.textContent =
+        project?.region ||
+        project?.location ||
+        "Regio niet beschikbaar";
+
+      showDebug({
+        connected: true,
+        project
+      });
+    }
+
+    async function loadModels() {
+      if (!workspaceApi) {
+        return;
+      }
+
+      refreshModelsButton.disabled = true;
+      analyseButton.disabled = true;
+
+      modelsSummary.textContent = "Modellen worden opgehaald...";
+      modelsList.innerHTML = "";
+
+      try {
+        const models = await workspaceApi.viewer.getModels();
+
+        availableModels = Array.isArray(models) ? models : [];
+
+        renderModels();
+
+        modelsCard.hidden = false;
+
+        const loadedCount = availableModels.filter(
+          isModelLoaded
+        ).length;
+
+        modelsSummary.textContent =
+          availableModels.length +
+          " modellen gevonden, waarvan " +
+          loadedCount +
+          " geladen.";
+
+        showDebug({
+          connected: true,
+          modelCount: availableModels.length,
+          models: availableModels
+        });
+      } catch (error) {
+        console.error("Modellen konden niet worden geladen:", error);
+
+        modelsSummary.textContent =
+          "De modellen konden niet worden opgehaald.";
+
+        setStatus(
+          "Verbonden, maar de modellen konden niet worden opgehaald.",
+          "warning"
+        );
+
+        showDebug({
+          connected: true,
+          modelsLoaded: false,
+          error: getErrorMessage(error)
+        });
+      } finally {
+        refreshModelsButton.disabled = false;
+        analyseButton.disabled = false;
+      }
+    }
+
+    function renderModels() {
+      if (availableModels.length === 0) {
+        modelsList.innerHTML = `
+          <div class="empty-state">
+            Er zijn geen modellen gevonden in de viewer.
+            Open of laad eerst een model in Trimble Connect.
+          </div>
+        `;
+
+        return;
+      }
+
+      modelsList.innerHTML = availableModels
+        .map((model, index) => {
+          const loaded = isModelLoaded(model);
+          const checked = loaded ? "checked" : "";
+
+          return `
+            <label class="model-item">
+              <input
+                class="model-checkbox"
+                type="checkbox"
+                value="${escapeHtml(model.id || "")}"
+                data-index="${index}"
+                ${checked}
+              >
+
+              <span class="model-information">
+                <strong>
+                  ${escapeHtml(model.name || "Naamloos model")}
+                </strong>
+
+                <span class="model-meta">
+                  ${escapeHtml(model.type || "Onbekend type")}
+                  ·
+                  <span class="${loaded ? "loaded-state" : ""}">
+                    ${escapeHtml(formatModelState(model.state))}
+                  </span>
+                </span>
+              </span>
+            </label>
+          `;
+        })
+        .join("");
+    }
+
+    function selectAllModels() {
+      const checkboxes = document.querySelectorAll(
+        ".model-checkbox"
+      );
+
+      const everyChecked = Array.from(checkboxes).every(
+        checkbox => checkbox.checked
+      );
+
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = !everyChecked;
+      });
+    }
+
+    function selectLoadedModels() {
+      const checkboxes = document.querySelectorAll(
+        ".model-checkbox"
+      );
+
+      checkboxes.forEach(checkbox => {
+        const index = Number(checkbox.dataset.index);
+        const model = availableModels[index];
+
+        checkbox.checked = isModelLoaded(model);
+      });
+    }
+
+    async function analyseSelectedModels() {
+      if (!workspaceApi || isAnalysing) {
+        return;
+      }
+
+      const selectedModelIds = getSelectedModelIds();
+
+      if (selectedModelIds.length === 0) {
+        setStatus(
+          "Selecteer minstens één model om te analyseren.",
+          "warning"
+        );
+
+        return;
+      }
+
+      isAnalysing = true;
+      analyseButton.disabled = true;
+      analysisCard.hidden = false;
+      analysisProgress.hidden = false;
+      categoriesList.innerHTML = "";
+      otherClassesDetails.hidden = true;
+
+      setStatus(
+        "De geselecteerde modellen worden geanalyseerd..."
+      );
+
+      try {
+        /*
+         * getObjects() geeft objecten gegroepeerd per model terug.
+         * We halen eerst de objecten op die momenteel in de viewer
+         * beschikbaar zijn.
+         */
+        const modelObjects =
+          await workspaceApi.viewer.getObjects();
+
+        const selectedModelObjects = (
+          Array.isArray(modelObjects) ? modelObjects : []
+        ).filter(group =>
+          selectedModelIds.includes(group.modelId)
+        );
+
+        const analysis = buildAnalysis(selectedModelObjects);
+
+        renderAnalysis(analysis);
+
+        setStatus(
+          "Modelanalyse voltooid.",
+          "success"
+        );
+
+        showDebug({
+          selectedModelIds,
+          analysis,
+          rawModelGroupCount: selectedModelObjects.length
+        });
+      } catch (error) {
+        console.error("Analyse mislukt:", error);
+
+        setStatus(
+          "De modelanalyse is mislukt. Bekijk de technische gegevens.",
+          "error"
+        );
+
+        analysisSummary.textContent =
+          "Analyse kon niet worden uitgevoerd.";
+
+        showDebug({
+          analysisCompleted: false,
+          error: getErrorMessage(error)
+        });
+      } finally {
+        analysisProgress.hidden = true;
+        analyseButton.disabled = false;
+        isAnalysing = false;
+      }
+    }
+
+    function buildAnalysis(modelGroups) {
+      const categoryCounts = {};
+      const classCounts = {};
+      let totalObjects = 0;
+
+      categoryDefinitions.forEach(category => {
+        categoryCounts[category.key] = {
+          label: category.label,
+          icon: category.icon,
+          count: 0,
+          classes: {}
+        };
+      });
+
+      modelGroups.forEach(modelGroup => {
+        const objects = Array.isArray(modelGroup.objects)
+          ? modelGroup.objects
+          : [];
+
+        objects.forEach(object => {
+          totalObjects += 1;
+
+          const className = determineObjectClass(object);
+          const category = findCategory(className);
+
+          classCounts[className] =
+            (classCounts[className] || 0) + 1;
+
+          if (category) {
+            const target = categoryCounts[category.key];
+
+            target.count += 1;
+            target.classes[className] =
+              (target.classes[className] || 0) + 1;
+          }
+        });
+      });
+
+      const knownClasses = new Set();
+
+      categoryDefinitions.forEach(category => {
+        category.classes.forEach(className => {
+          knownClasses.add(normalizeText(className));
+        });
+      });
+
+      const otherClasses = Object.entries(classCounts)
+        .filter(([className]) => !findCategory(className))
+        .sort((a, b) => b[1] - a[1]);
+
+      return {
+        totalObjects,
+        modelCount: modelGroups.length,
+        categories: Object.values(categoryCounts)
+          .filter(category => category.count > 0)
+          .sort((a, b) => b.count - a.count),
+        otherClasses
+      };
+    }
+
+    function renderAnalysis(analysis) {
+      analysisSummary.textContent =
+        analysis.totalObjects.toLocaleString("nl-BE") +
+        " objecten uit " +
+        analysis.modelCount +
+        " modellen onderzocht.";
+
+      if (analysis.categories.length === 0) {
+        categoriesList.innerHTML = `
+          <div class="empty-state">
+            Er werden nog geen herkenbare bouwcategorieën gevonden.
+            Open de technische gegevens om de beschikbare klassen te bekijken.
+          </div>
+        `;
+      } else {
+        categoriesList.innerHTML = analysis.categories
+          .map(category => {
+            const classText = Object.entries(category.classes)
+              .sort((a, b) => b[1] - a[1])
+              .map(([className, count]) => {
+                return `
+                  <span>
+                    ${escapeHtml(className)}:
+                    ${count.toLocaleString("nl-BE")}
+                  </span>
+                `;
+              })
+              .join("");
+
+            return `
+              <article class="category-card">
+                <div class="category-icon">
+                  ${escapeHtml(category.icon)}
+                </div>
+
+                <div class="category-content">
+                  <h3>${escapeHtml(category.label)}</h3>
+
+                  <div class="category-classes">
+                    ${classText}
+                  </div>
+                </div>
+
+                <strong class="category-count">
+                  ${category.count.toLocaleString("nl-BE")}
+                </strong>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      if (analysis.otherClasses.length > 0) {
+        otherClassesDetails.hidden = false;
+
+        otherClassesList.innerHTML = analysis.otherClasses
+          .map(([className, count]) => {
+            return `
+              <div class="other-class-row">
+                <span>${escapeHtml(className)}</span>
+                <strong>${count.toLocaleString("nl-BE")}</strong>
+              </div>
+            `;
+          })
+          .join("");
+      } else {
+        otherClassesDetails.hidden = true;
+      }
+    }
+
+    function determineObjectClass(object) {
+      return (
+        object?.class ||
+        object?.product?.objectType ||
+        object?.product?.name ||
+        "Onbekende klasse"
+      );
+    }
+
+    function findCategory(className) {
+      const normalizedClass = normalizeText(className);
+
+      return categoryDefinitions.find(category =>
+        category.classes.some(candidate => {
+          const normalizedCandidate = normalizeText(candidate);
+
+          return (
+            normalizedClass === normalizedCandidate ||
+            normalizedClass.includes(normalizedCandidate) ||
+            normalizedCandidate.includes(normalizedClass)
+          );
+        })
+      );
+    }
+
+    function getSelectedModelIds() {
+      return Array.from(
+        document.querySelectorAll(".model-checkbox:checked")
+      )
+        .map(checkbox => checkbox.value)
+        .filter(Boolean);
+    }
+
+    function isModelLoaded(model) {
+      const state = normalizeText(model?.state);
+
+      return (
+        state.includes("loaded") ||
+        state.includes("visible") ||
+        state.includes("active")
+      );
+    }
+
+    function formatModelState(state) {
+      if (!state) {
+        return "Status onbekend";
+      }
+
+      const normalized = String(state)
+        .replaceAll("_", " ")
+        .replaceAll("-", " ");
+
+      return normalized.charAt(0).toUpperCase() +
+        normalized.slice(1);
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replaceAll(" ", "")
+        .replaceAll("_", "")
+        .replaceAll("-", "");
+    }
+
+    function handleTrimbleEvent(event, data) {
+      console.log("Trimble Connect event:", event, data);
+
+      if (
+        event === "viewer.onModelStateChanged" ||
+        event === "viewer.modelStateChanged"
+      ) {
+        loadModels();
+      }
+
+      if (
+        event === "extension.sessionInvalid" ||
+        event === "embed.session.invalid"
+      ) {
+        setStatus(
+          "De Trimble Connect-sessie is niet meer geldig.",
+          "error"
+        );
+      }
+    }
+
+    function setStatus(message, type = "") {
+      statusElement.textContent = message;
+      statusElement.className = "status";
+
+      if (type) {
+        statusElement.classList.add(type);
+      }
+    }
+
+    function showDebug(data) {
+      resultElement.textContent = JSON.stringify(
+        data,
+        null,
+        2
+      );
+    }
+
+    function getErrorMessage(error) {
+      if (error instanceof Error) {
+        return error.message;
+      }
+
+      return String(error);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
 </body>
 </html>
