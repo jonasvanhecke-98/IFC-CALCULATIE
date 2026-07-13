@@ -1,7 +1,12 @@
 :root {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
+
   color: #1f2933;
-  background: #f2f4f5;
+  background: #eef1f3;
 }
 
 * {
@@ -10,44 +15,52 @@
 
 body {
   margin: 0;
+  min-width: 280px;
+}
+
+button {
+  font: inherit;
 }
 
 .app {
-  padding: 20px;
+  padding: 18px;
 }
 
-header {
+.header {
   margin-bottom: 20px;
 }
 
 .eyebrow {
   margin: 0 0 8px;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
 }
 
 h1 {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 25px;
+  line-height: 1.15;
 }
 
-header p:last-child {
-  line-height: 1.5;
+.intro {
+  margin: 14px 0 0;
+  line-height: 1.55;
 }
 
 .panel {
   padding: 18px;
-  border: 1px solid #d7dde1;
-  border-radius: 10px;
-  background: white;
+  border: 1px solid #d4dce1;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .status {
   margin-bottom: 16px;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border-radius: 7px;
   background: #edf2f5;
+  line-height: 1.4;
 }
 
 .status.success {
@@ -55,19 +68,29 @@ header p:last-child {
   color: #176b35;
 }
 
+.status.warning {
+  background: #fff6da;
+  color: #765900;
+}
+
 .status.error {
-  background: #fdecec;
-  color: #9b1c1c;
+  background: #fdeaea;
+  color: #a11919;
 }
 
 button {
-  padding: 10px 15px;
+  width: 100%;
+  padding: 11px 15px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #263746;
-  color: white;
+  color: #ffffff;
   cursor: pointer;
-  font: inherit;
+  font-weight: 700;
+}
+
+button:hover {
+  background: #1c2a35;
 }
 
 button:disabled {
@@ -75,12 +98,61 @@ button:disabled {
   opacity: 0.6;
 }
 
+.project-card {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #dce3e7;
+  border-radius: 9px;
+  background: #f8fafb;
+}
+
+.project-card h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+
+dl {
+  margin: 0;
+}
+
+dl > div {
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e7ea;
+}
+
+dl > div:last-child {
+  border-bottom: 0;
+}
+
+dt {
+  margin-bottom: 4px;
+  color: #586670;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.debug {
+  margin-top: 18px;
+}
+
+.debug summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
 pre {
-  margin-top: 16px;
+  margin: 12px 0 0;
   padding: 12px;
   overflow: auto;
-  border-radius: 6px;
-  background: #16212a;
-  color: white;
+  border-radius: 7px;
+  background: #15212a;
+  color: #ffffff;
+  font-size: 12px;
   white-space: pre-wrap;
 }
