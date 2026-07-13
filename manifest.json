@@ -1,0 +1,6 @@
+{
+  "title": "IFC Calculatietool",
+  "description": "Analyseert modellen en IFC-properties in Trimble Connect.",
+  "url": "https://JOUW-GITHUB-NAAM.github.io/trimble-ifc-calculatie/",
+  "enabled": true
+}
